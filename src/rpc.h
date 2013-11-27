@@ -11,9 +11,11 @@ class Rpc : public QObject
 {
     Q_OBJECT
 
+    bool requires_auth;
     QSettings * settings;
     QNetworkAccessManager * nam;
     QByteArray auth_token;
+    QHash<QNetworkReply*,QString> requests;
 
 public:
     explicit Rpc(QObject * p, QSettings * s);
