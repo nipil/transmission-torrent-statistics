@@ -34,9 +34,9 @@ void Tts::loadSettings()
 
     QMap<QString,QVariant> params;
     params.insert(TTS_SETTINGS_RPC_HOST,QString("localhost"));
-    params.insert(TTS_SETTINGS_RPC_PORT, int(4646));
-    params.insert(TTS_SETTINGS_RPC_USER, QString("transmission"));
-    params.insert(TTS_SETTINGS_RPC_PASSWORD, QString("Poulet"));
+    params.insert(TTS_SETTINGS_RPC_PORT, int(9091));
+    params.insert(TTS_SETTINGS_RPC_USER, QString(""));
+    params.insert(TTS_SETTINGS_RPC_PASSWORD, QString(""));
     params.insert(TTS_SETTINGS_RPC_SSL, bool(false));
 
     QMap<QString,QVariant>::const_iterator i;
