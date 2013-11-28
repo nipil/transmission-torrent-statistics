@@ -20,7 +20,8 @@ class Rpc : public QObject
 public:
     explicit Rpc(QObject * p, QSettings * s);
     
-    void request(QString request);
+    void request(QString & request);
+    void response(QString & response);
 
 signals:
     

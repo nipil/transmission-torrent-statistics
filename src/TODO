@@ -1,2 +1,3 @@
 proper logging (stdout/sderr vs debug)
-unzip reply
+reuse tcp socket
+add proxy support

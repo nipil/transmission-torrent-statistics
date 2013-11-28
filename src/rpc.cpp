@@ -14,12 +14,15 @@ Rpc::Rpc(QObject * p, QSettings * s) :
 void Rpc::poll()
 {
     qDebug() << "RPC poll";
-    request("pouet");
+
+    QString tmp = "pouet";
+    request(tmp);
 }
 
-void Rpc::request(QString request)
+void Rpc::request(QString & query)
 {
     qDebug() << "RPC request";
+    qDebug() << "\n" << query << "\n";
 
     QUrl url;
     url.setHost(settings->value(TTS_SETTINGS_RPC_HOST).toString());
@@ -57,8 +60,8 @@ void Rpc::request(QString request)
         req->setRawHeader(QByteArray("X-Transmission-Session-Id"),auth_token);
     }
 
-    QNetworkReply* reply = nam->post(*req,request.toUtf8());
-    requests.insert(reply,request);
+    QNetworkReply* reply = nam->post(*req,query.toUtf8());
+    requests.insert(reply,query);
 
     if (req) delete req;
 }
@@ -69,41 +72,54 @@ void Rpc::finished( QNetworkReply * reply )
 
     QString cur_request = requests.take(reply);
     if (cur_request.isEmpty())
-        qDebug() << "No request found for hash" << reply;
+        qDebug() << "No request found for this reply hash" << reply;
+
+    int httpcode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    qDebug() << "HTTP code" << httpcode;
 
     switch (reply->error())
     {
     case QNetworkReply::NoError:
         // 0 = no error condition.
         // Note: When the HTTP protocol returns a redirect no error will be reported. You can check if there is a redirect with the QNetworkRequest::RedirectionTargetAttribute attribute.
+        if (httpcode == 200)
+        {
+            QByteArray data = reply->readAll();
+            QString resp = data;
+            response(resp);
+        }
         break;
     case QNetworkReply::AuthenticationRequiredError:
         // 204 = the remote server requires authentication to serve the content
         // but the credentials provided were not accepted (if any)
-        // corresponds to the HTTP 401 error
-        if (!requires_auth)
+        if (httpcode == 401)
         {
-            qDebug() << "Authentication required, retrying with credentials";
-            requires_auth = true;
-            request(cur_request);
-        }
-        else
-        {
-            qCritical() << "Authentication failed" << reply;
+            if (!requires_auth)
+            {
+                qDebug() << "Authentication required, retrying with credentials";
+                requires_auth = true;
+                request(cur_request);
+            }
+            else
+            {
+                qCritical() << "Authentication failed" << reply;
+            }
         }
         break;
     case QNetworkReply::UnknownContentError:
         // 299 = an unknown error related to the remote content was detected
-        // corresponds to the HTTP 409 Conflict
-        // reply provides the X-Transmission-Session-Id header
-        auth_token = reply->rawHeader(QByteArray("X-Transmission-Session-Id"));
-        if (auth_token.isEmpty())
+        if (httpcode == 409)
         {
-            qDebug() << "Didn't get an X-Transmission-Session-Id token." << reply;
-            break;
+            // reply provides the X-Transmission-Session-Id header
+            auth_token = reply->rawHeader(QByteArray("X-Transmission-Session-Id"));
+            if (auth_token.isEmpty())
+            {
+                qDebug() << "Didn't get an X-Transmission-Session-Id token." << reply;
+                break;
+            }
+            qDebug() << "X-Transmission-Session-Id" << auth_token << "now redo request";
+            request(cur_request);
         }
-        qDebug() << "X-Transmission-Session-Id" << auth_token << "now redo request";
-        request(cur_request);
         break;
     default:
         qDebug() << "Error" << reply->error();
@@ -111,4 +127,10 @@ void Rpc::finished( QNetworkReply * reply )
     }
 
     if (reply) reply->deleteLater();
+}
+
+void Rpc::response(QString & response)
+{
+    qDebug() << "RPC response";
+    qDebug() << "\n" << response << "\n";
 }
