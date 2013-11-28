@@ -1,4 +1,6 @@
+#include <QtGlobal>
 #include <QDebug>
+#include <QStringList>
 #include "common.h"
 #include "rpc.h"
 
@@ -14,9 +16,7 @@ Rpc::Rpc(QObject * p, QSettings * s) :
 void Rpc::poll()
 {
     qDebug() << "RPC poll";
-
-    QString tmp = "pouet";
-    http_request(tmp);
+    tbt_everstats();
 }
 
 void Rpc::http_request(QString & query)
@@ -148,37 +148,88 @@ void Rpc::http_response(QString & response)
 {
     qDebug() << "RPC response";
     qDebug() << "\n" << response << "\n";
+
+    QString result;
+    QStringList arguments;
+    ulong tag;
+    json_response(result, arguments, &tag);
 }
 
-void Rpc::json_request(QString method, QStringList & arguments, unsigned int tag)
+void Rpc::json_array(QString & out, QString key, QStringList items, bool quoted_items)
 {
-    /*
+    QTextStream text(&out);
+    QString sep = (quoted_items) ? "\",\"" : ",";
+    text << "\"" << key << "\":[";
+    if (!items.isEmpty())
     {
-       "arguments":{
-          "fields":[
-             "status",
-             "uploadRatio"
-          ]
-       },
-       "method":"torrent-get",
-       "tag":4
+        if (quoted_items)
+            text << "\"";
+        text << items.join(sep);
+        if (quoted_items)
+            text << "\"";
+        text << "]";
     }
-    */
 }
 
-void Rpc::json_response(QString & result, QStringList & arguments, unsigned int * tag)
+void Rpc::json_append(QTextStream & text, QString key, QString value, bool quoted_value)
+{
+    text << "\"" << key << "\":";
+    if (quoted_value)
+        text << "\"";
+    text << value;
+    if (quoted_value)
+        text << "\"";
+}
+
+void Rpc::json_request(QString method, QStringList & arguments, ulong tag)
+{
+    QString json;
+    QTextStream ts(&json);
+    ts << "{";
+    json_append(ts,"arguments", "{" + arguments.join(",") + "}",false);
+    ts << ",";
+    json_append(ts,"method","torrent-get",true);
+    if (tag > 0)
+    {
+        ts << ",";
+        json_append(ts,"tag",QString::number(tag),false);
+    }
+    ts << "}";
+    http_request(json);
+}
+
+void Rpc::json_response(QString & result, QStringList & arguments, ulong * tag)
 {
     /*
     {
        "arguments":{
           "torrents":[
              {
-                "uploadRatio":0.1026
-             }
+                "downloadedEver":0,
+                "hashString":"26942386b3e4e69fbe8bbd462d14076d17dc0123",
+                "name":"tagada",
+                "uploadedEver":1229818760
+             },{}
           ]
        },
        "result":"success",
-       "tag":4
+       "tag":1
     }
     */
+}
+
+void Rpc::tbt_everstats()
+{
+    static uint tag = 1;
+    QString method = "torrent-get";
+    QStringList tmp;
+    tmp << "hashString";
+    tmp << "uploadedEver";
+    tmp << "downloadedEver";
+    tmp << "name";
+    QString json_fields;
+    json_array(json_fields, "fields", tmp, true);
+    tmp.clear();
+    tmp.append(json_fields);
+    json_request(method, tmp, tag++);
 }

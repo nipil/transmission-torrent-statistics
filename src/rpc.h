@@ -6,6 +6,7 @@
 #include <QNetworkReply>
 #include <QUrl>
 #include <QSettings>
+#include <QTextStream>
 
 class Rpc : public QObject
 {
@@ -17,14 +18,19 @@ class Rpc : public QObject
     QByteArray auth_token;
     QHash<QNetworkReply*,QString> requests;
 
-public:
-    explicit Rpc(QObject * p, QSettings * s);
-    
+    void tbt_everstats();
+
+    void json_request(QString method, QStringList & arguments, ulong tag);
+    void json_response(QString & result, QStringList & arguments, ulong * tag);
+
+    void json_append(QTextStream & text, QString key, QString value, bool quoted_value);
+    void json_array(QString & out, QString key, QStringList items, bool quoted_items);
+
     void http_request(QString & request);
     void http_response(QString & response);
 
-    void json_request(QString method, QStringList & arguments, unsigned int tag = 0);
-    void json_response(QString & result, QStringList & arguments, unsigned int * tag = NULL);
+public:
+    explicit Rpc(QObject * p, QSettings * s);
 
 signals:
     
