@@ -8,7 +8,7 @@ Rpc::Rpc(QObject * p, QSettings * s) :
     settings(s)
 {
     nam = new QNetworkAccessManager(this);
-    connect(nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(finished(QNetworkReply*)));
+    connect(nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
 }
 
 void Rpc::poll()
@@ -16,10 +16,10 @@ void Rpc::poll()
     qDebug() << "RPC poll";
 
     QString tmp = "pouet";
-    request(tmp);
+    http_request(tmp);
 }
 
-void Rpc::request(QString & query)
+void Rpc::http_request(QString & query)
 {
     qDebug() << "RPC request";
     qDebug() << "\n" << query << "\n";
@@ -66,7 +66,7 @@ void Rpc::request(QString & query)
     if (req) delete req;
 }
 
-void Rpc::finished( QNetworkReply * reply )
+void Rpc::http_finished( QNetworkReply * reply )
 {
     qDebug() << "RPC finished";
 
@@ -90,7 +90,7 @@ void Rpc::finished( QNetworkReply * reply )
         {
             QByteArray data = reply->readAll();
             QString resp = data;
-            response(resp);
+            http_response(resp);
         }
         break;
 
@@ -109,7 +109,7 @@ void Rpc::finished( QNetworkReply * reply )
             {
                 qDebug() << "Authentication required, retrying with credentials";
                 requires_auth = true;
-                request(cur_request);
+                http_request(cur_request);
             }
             else
             {
@@ -132,7 +132,7 @@ void Rpc::finished( QNetworkReply * reply )
 		        break;
             }
 	        qDebug() << "New X-Transmission-Session-Id" << auth_token << "now redo request";
-	        request(cur_request);
+            http_request(cur_request);
         }
         break;
     default:
@@ -144,8 +144,41 @@ void Rpc::finished( QNetworkReply * reply )
     if (reply) reply->deleteLater();
 }
 
-void Rpc::response(QString & response)
+void Rpc::http_response(QString & response)
 {
     qDebug() << "RPC response";
     qDebug() << "\n" << response << "\n";
+}
+
+void Rpc::json_request(QString method, QStringList & arguments, unsigned int tag)
+{
+    /*
+    {
+       "arguments":{
+          "fields":[
+             "status",
+             "uploadRatio"
+          ]
+       },
+       "method":"torrent-get",
+       "tag":4
+    }
+    */
+}
+
+void Rpc::json_response(QString & result, QStringList & arguments, unsigned int * tag)
+{
+    /*
+    {
+       "arguments":{
+          "torrents":[
+             {
+                "uploadRatio":0.1026
+             }
+          ]
+       },
+       "result":"success",
+       "tag":4
+    }
+    */
 }
