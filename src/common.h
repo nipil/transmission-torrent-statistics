@@ -12,4 +12,6 @@
 #define TTS_SETTINGS_RPC_PASSWORD "RPC/Password"
 #define TTS_SETTINGS_RPC_SSL "RPC/SSL"
 
+#define EXIT_SIGNAL_INITERROR 1
+
 #endif // COMMON_H

@@ -1,3 +1,4 @@
+#include <QtGlobal>
 #include <QDebug>
 #include "common.h"
 #include "rpc.h"
@@ -69,7 +70,11 @@ void Rpc::finished( QNetworkReply * reply )
 
     QString cur_request = requests.take(reply);
     if (cur_request.isEmpty())
-        qDebug() << "No request found for hash" << reply;
+    {
+        // TODO: better reporting ?
+        qDebug() << "No request found for this reply hash" << reply;
+        return;
+    }
 
     switch (reply->error())
     {
@@ -77,6 +82,13 @@ void Rpc::finished( QNetworkReply * reply )
         // 0 = no error condition.
         // Note: When the HTTP protocol returns a redirect no error will be reported. You can check if there is a redirect with the QNetworkRequest::RedirectionTargetAttribute attribute.
         break;
+
+    case QNetworkReply::ConnectionRefusedError:
+        // 1 = the remote server refused the connection (the server is not accepting requests)
+        qCritical() << "Could not contact host";
+        // TODO: stop polling process ?
+        break;
+
     case QNetworkReply::AuthenticationRequiredError:
         // 204 = the remote server requires authentication to serve the content
         // but the credentials provided were not accepted (if any)
@@ -90,24 +102,31 @@ void Rpc::finished( QNetworkReply * reply )
         else
         {
             qCritical() << "Authentication failed" << reply;
+            // TODO: stop polling process ?
         }
         break;
+
     case QNetworkReply::UnknownContentError:
         // 299 = an unknown error related to the remote content was detected
         // corresponds to the HTTP 409 Conflict
         // reply provides the X-Transmission-Session-Id header
+        // libtransmission: token validity is 1 hour (not refreshed)
+        qDebug() << "Current X-Transmission-Session-Id" << auth_token;
         auth_token = reply->rawHeader(QByteArray("X-Transmission-Session-Id"));
         if (auth_token.isEmpty())
         {
-            qDebug() << "Didn't get an X-Transmission-Session-Id token." << reply;
+            qCritical() << "Expected an X-Transmission-Session-Id token, but didn't get any." << reply;
+            // TODO: stop polling process ?
             break;
         }
-        qDebug() << "X-Transmission-Session-Id" << auth_token << "now redo request";
+        qDebug() << "New X-Transmission-Session-Id" << auth_token << "now redo request";
         request(cur_request);
         break;
+
     default:
-        qDebug() << "Error" << reply->error();
+        qDebug() << "Unidentified Error" << reply->error();
         break;
+
     }
 
     if (reply) reply->deleteLater();

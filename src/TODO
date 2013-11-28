@@ -1,2 +1,2 @@
-proper logging (stdout/sderr vs debug)
+rpc parent stop polling when qCritical
 unzip reply

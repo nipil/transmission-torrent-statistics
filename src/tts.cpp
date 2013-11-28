@@ -1,3 +1,4 @@
+#include <QtGlobal>
 #include <QDebug>
 #include "common.h"
 #include "tts.h"
