@@ -27,4 +27,4 @@ HEADERS += \
 OTHER_FILES += \
     TODO
 
-
+LIBS += -lqjson

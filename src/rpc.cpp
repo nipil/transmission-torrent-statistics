@@ -1,11 +1,14 @@
 #include <QtGlobal>
 #include <QDebug>
 #include <QStringList>
+#include <qjson/parser.h>
+#include <qjson/serializer.h>
 #include "common.h"
 #include "rpc.h"
 
 Rpc::Rpc(QObject * p, QSettings * s) :
     QObject(p),
+    tag(1),
     requires_auth(false),
     settings(s)
 {
@@ -19,7 +22,7 @@ void Rpc::poll()
     tbt_everstats();
 }
 
-void Rpc::http_request(QString & query)
+void Rpc::http_request(QByteArray & query)
 {
     qDebug() << "RPC request";
     qDebug() << "\n" << query << "\n";
@@ -60,7 +63,8 @@ void Rpc::http_request(QString & query)
         req->setRawHeader(QByteArray("X-Transmission-Session-Id"),auth_token);
     }
 
-    QNetworkReply* reply = nam->post(*req,query.toUtf8());
+    QNetworkReply* reply = nam->post(*req,query);
+    Q_ASSERT(reply == NULL);
     requests.insert(reply,query);
 
     if (req) delete req;
@@ -70,7 +74,8 @@ void Rpc::http_finished( QNetworkReply * reply )
 {
     qDebug() << "RPC finished";
 
-    QString cur_request = requests.take(reply);
+    QByteArray cur_resp;
+    QByteArray cur_request = requests.take(reply);
     if (cur_request.isEmpty())
     {
         // TODO: better reporting ?
@@ -88,9 +93,8 @@ void Rpc::http_finished( QNetworkReply * reply )
         // Note: When the HTTP protocol returns a redirect no error will be reported. You can check if there is a redirect with the QNetworkRequest::RedirectionTargetAttribute attribute.
         if (httpcode == 200)
         {
-            QByteArray data = reply->readAll();
-            QString resp = data;
-            http_response(resp);
+            QByteArray cur_resp = reply->readAll();
+            http_response(cur_resp);
         }
         break;
 
@@ -114,6 +118,7 @@ void Rpc::http_finished( QNetworkReply * reply )
             else
             {
                 qCritical() << "Authentication failed" << reply;
+                // TODO: stop polling process ?
             }
         }
         break;
@@ -144,92 +149,54 @@ void Rpc::http_finished( QNetworkReply * reply )
     if (reply) reply->deleteLater();
 }
 
-void Rpc::http_response(QString & response)
+void Rpc::http_response(QByteArray & response)
 {
     qDebug() << "RPC response";
     qDebug() << "\n" << response << "\n";
 
-    QString result;
-    QStringList arguments;
-    ulong tag;
-    json_response(result, arguments, &tag);
-}
+    QJson::Parser parser;
+    bool ok;
 
-void Rpc::json_array(QString & out, QString key, QStringList items, bool quoted_items)
-{
-    QTextStream text(&out);
-    QString sep = (quoted_items) ? "\",\"" : ",";
-    text << "\"" << key << "\":[";
-    if (!items.isEmpty())
+    QVariant data = parser.parse(response, &ok);
+    if (!ok)
     {
-        if (quoted_items)
-            text << "\"";
-        text << items.join(sep);
-        if (quoted_items)
-            text << "\"";
-        text << "]";
+        // TODO better handling ?
+        qDebug() << "QJson parsing error" << parser.errorString() << "at" << parser.errorLine();
+        return;
     }
+
+    json_response(data);
 }
 
-void Rpc::json_append(QTextStream & text, QString key, QString value, bool quoted_value)
+void Rpc::json_request(QString method, QVariantMap & arguments)
 {
-    text << "\"" << key << "\":";
-    if (quoted_value)
-        text << "\"";
-    text << value;
-    if (quoted_value)
-        text << "\"";
-}
+    QVariantMap req;
+    req.insert("method",method);
+    req.insert("arguments",arguments);
+    req.insert("tag",tag++);
 
-void Rpc::json_request(QString method, QStringList & arguments, ulong tag)
-{
-    QString json;
-    QTextStream ts(&json);
-    ts << "{";
-    json_append(ts,"arguments", "{" + arguments.join(",") + "}",false);
-    ts << ",";
-    json_append(ts,"method","torrent-get",true);
-    if (tag > 0)
-    {
-        ts << ",";
-        json_append(ts,"tag",QString::number(tag),false);
-    }
-    ts << "}";
+    QJson::Serializer s;
+    QByteArray json = s.serialize(req);
+    qDebug() << json;
+
     http_request(json);
 }
 
-void Rpc::json_response(QString & result, QStringList & arguments, ulong * tag)
+void Rpc::json_response(QVariant & response)
 {
-    /*
-    {
-       "arguments":{
-          "torrents":[
-             {
-                "downloadedEver":0,
-                "hashString":"26942386b3e4e69fbe8bbd462d14076d17dc0123",
-                "name":"tagada",
-                "uploadedEver":1229818760
-             },{}
-          ]
-       },
-       "result":"success",
-       "tag":1
-    }
-    */
+    qDebug() << response;
 }
 
 void Rpc::tbt_everstats()
 {
-    static uint tag = 1;
-    QString method = "torrent-get";
-    QStringList tmp;
+    QVariantList tmp;
     tmp << "hashString";
     tmp << "uploadedEver";
     tmp << "downloadedEver";
     tmp << "name";
-    QString json_fields;
-    json_array(json_fields, "fields", tmp, true);
-    tmp.clear();
-    tmp.append(json_fields);
-    json_request(method, tmp, tag++);
+
+    QVariantMap fields;
+    fields.insert("fields",tmp);
+
+    json_request("torrent-get", fields);
 }

@@ -12,22 +12,20 @@ class Rpc : public QObject
 {
     Q_OBJECT
 
+    uint tag;
     bool requires_auth;
     QSettings * settings;
     QNetworkAccessManager * nam;
     QByteArray auth_token;
-    QHash<QNetworkReply*,QString> requests;
+    QHash<QNetworkReply*,QByteArray> requests;
 
     void tbt_everstats();
 
-    void json_request(QString method, QStringList & arguments, ulong tag);
-    void json_response(QString & result, QStringList & arguments, ulong * tag);
+    void json_request(QString method, QVariantMap & arguments);
+    void json_response(QVariant & response);
 
-    void json_append(QTextStream & text, QString key, QString value, bool quoted_value);
-    void json_array(QString & out, QString key, QStringList items, bool quoted_items);
-
-    void http_request(QString & request);
-    void http_response(QString & response);
+    void http_request(QByteArray & request);
+    void http_response(QByteArray & response);
 
 public:
     explicit Rpc(QObject * p, QSettings * s);
