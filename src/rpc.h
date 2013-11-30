@@ -17,14 +17,16 @@ class Rpc : public QObject
     QSettings * settings;
     QNetworkAccessManager * nam;
     QByteArray auth_token;
-    QHash<QNetworkReply*,QByteArray> requests;
+    QHash<QNetworkReply*,uint> http_tracking;
+    QHash<uint,QByteArray> json_tracking;
 
-    void tbt_everstats();
+    void tbt_everstats_request();
+    void tbt_everstats_result(QVariant & arguments);
 
     void json_request(QString method, QVariantMap & arguments);
     void json_response(QVariant & response);
 
-    void http_request(QByteArray & request);
+    void http_request(uint json_tag);
     void http_response(QByteArray & response);
 
 public:

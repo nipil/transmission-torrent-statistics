@@ -18,14 +18,14 @@ Rpc::Rpc(QObject * p, QSettings * s) :
 
 void Rpc::poll()
 {
-    qDebug() << "RPC poll";
-    tbt_everstats();
+    qDebug() << "Rpc::poll";
+    tbt_everstats_request();
 }
 
-void Rpc::http_request(QByteArray & query)
+void Rpc::http_request(uint json_tag)
 {
-    qDebug() << "RPC request";
-    qDebug() << "\n" << query << "\n";
+    qDebug() << "Rpc::http_request" << json_tag;
+    qDebug() << "\n" << json_tracking[json_tag] << "\n";
 
     QUrl url;
     url.setHost(settings->value(TTS_SETTINGS_RPC_HOST).toString());
@@ -63,25 +63,22 @@ void Rpc::http_request(QByteArray & query)
         req->setRawHeader(QByteArray("X-Transmission-Session-Id"),auth_token);
     }
 
-    QNetworkReply* reply = nam->post(*req,query);
+    QNetworkReply* reply = nam->post(*req,json_tracking[json_tag]);
     Q_ASSERT(reply != NULL);
-    requests.insert(reply,query);
+    qDebug() << "reply" << reply;
+
+    http_tracking.insert(reply,json_tag);
 
     if (req) delete req;
 }
 
 void Rpc::http_finished( QNetworkReply * reply )
 {
-    qDebug() << "RPC finished";
+    qDebug() << "Rpc::http_finished" << reply;
 
-    QByteArray cur_resp;
-    QByteArray cur_request = requests.take(reply);
-    if (cur_request.isEmpty())
-    {
-        // TODO: better reporting ?
-        qDebug() << "No request found for this reply hash" << reply;
-        return;
-    }
+    uint cur_request = http_tracking.take(reply);
+    Q_ASSERT(cur_request > 0);
+    qDebug() << "cur_request" << cur_request;
 
     int httpcode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     qDebug() << "HTTP code" << httpcode;
@@ -151,8 +148,7 @@ void Rpc::http_finished( QNetworkReply * reply )
 
 void Rpc::http_response(QByteArray & response)
 {
-    qDebug() << "RPC response";
-    qDebug() << "\n" << response << "\n";
+    qDebug() << "Rpc::http_response" << response;
 
     QJson::Parser parser;
     bool ok;
@@ -160,8 +156,8 @@ void Rpc::http_response(QByteArray & response)
     QVariant data = parser.parse(response, &ok);
     if (!ok)
     {
-        // TODO better handling ?
         qDebug() << "QJson parsing error" << parser.errorString() << "at" << parser.errorLine();
+        // TODO better handling ?
         return;
     }
 
@@ -170,25 +166,58 @@ void Rpc::http_response(QByteArray & response)
 
 void Rpc::json_request(QString method, QVariantMap & arguments)
 {
+    qDebug() << "Rpc::json_request";
+
     QVariantMap req;
     req.insert("method",method);
     req.insert("arguments",arguments);
-    req.insert("tag",tag++);
+    req.insert("tag",tag);
 
     QJson::Serializer s;
     QByteArray json = s.serialize(req);
     qDebug() << json;
 
-    http_request(json);
+    json_tracking.insert(tag,json);
+
+    http_request(tag);
+    tag++;
 }
 
 void Rpc::json_response(QVariant & response)
 {
-    qDebug() << response;
+    qDebug() << "Rpc::json_response";
+
+    Q_ASSERT(response.type() == QVariant::Map);
+    QVariantMap vm = response.toMap();
+
+    qDebug() << "tag" << vm["tag"].toString();
+    bool ok;
+    uint cur_tag = vm["tag"].toUInt(&ok);
+    if (!ok)
+    {
+        qDebug() << "Cannot convert tag to uint";
+        // TODO better handling ?
+        return;
+    }
+
+    QByteArray json_cur = json_tracking.take(cur_tag);
+
+    QString result = vm["result"].toString();
+    qDebug() << "result" << result;
+    if (result != "success")
+    {
+        qDebug() << "json request failed : " << json_cur;
+        // TODO better handling ?
+        return;
+    }
+
+    tbt_everstats_result(vm["arguments"]);
 }
 
-void Rpc::tbt_everstats()
+void Rpc::tbt_everstats_request()
 {
+    qDebug() << "Rpc::tbt_everstats_request";
+
     QVariantList tmp;
     tmp << "hashString";
     tmp << "uploadedEver";
@@ -199,4 +228,33 @@ void Rpc::tbt_everstats()
     fields.insert("fields",tmp);
 
     json_request("torrent-get", fields);
+}
+
+void Rpc::tbt_everstats_result(QVariant & arguments)
+{
+    qDebug() << "Rpc::tbt_everstats_result";
+
+    Q_ASSERT(arguments.type() == QVariant::Map);
+    QVariantMap am = arguments.toMap();
+
+    Q_ASSERT(am["torrents"].type() == QVariant::List);
+    QVariantList torrents = am["torrents"].toList();
+
+    foreach (QVariant torrent, torrents) {
+        bool ok;
+        QVariantMap mt = torrent.toMap();
+
+        qlonglong downloadedEver = mt["downloadedEver"].toLongLong(&ok);
+        if (!ok)
+            qDebug() << "cannot convert downloadedEver to longlong";
+
+        qlonglong uploadedEver = mt["uploadedEver"].toLongLong(&ok);
+        if (!ok)
+            qDebug() << "cannot convert uploadedEver to longlong";
+
+        QString hashString = mt["hashString"].toString();
+        QString name = mt["name"].toString();
+
+        qDebug() << hashString << downloadedEver << uploadedEver << name;
+    }
 }
