@@ -12,13 +12,26 @@ Rpc::Rpc(QObject * p, QSettings * s) :
     requires_auth(false),
     settings(s)
 {
+    qDebug() << "Rpc::Rpc";
+
     nam = new QNetworkAccessManager(this);
+    Q_ASSERT(nam != NULL);
+
     connect(nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
+}
+
+Rpc::~Rpc()
+{
+    qDebug() << "Rpc::~Rpc";
+
+    if (nam)
+        delete nam;
 }
 
 void Rpc::poll()
 {
     qDebug() << "Rpc::poll";
+
     tbt_everstats_request();
 }
 
@@ -37,11 +50,11 @@ void Rpc::http_request(uint json_tag)
     url.setPath("/transmission/rpc/");
     qDebug() << "url" << url;
 
-    QNetworkRequest * req = new QNetworkRequest(url);
+    QNetworkRequest req(url);
 
-    req->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QString ua = TTS_APP_NAME + QString("/") + TTS_APP_VERSION;
-    req->setRawHeader(QByteArray("User-Agent"), QByteArray(ua.toUtf8()));
+    req.setRawHeader(QByteArray("User-Agent"), QByteArray(ua.toUtf8()));
 
     if (requires_auth)
     {
@@ -51,7 +64,7 @@ void Rpc::http_request(uint json_tag)
         {
             QByteArray basic_auth = "Basic " + QByteArray(QString(username + ":" + password).toUtf8()).toBase64();
             qDebug() << "With authentication: username" << username << "password" << password << "basic_auth" << basic_auth;
-            req->setRawHeader(QByteArray("Authorization"),basic_auth);
+            req.setRawHeader(QByteArray("Authorization"),basic_auth);
         }
     }
     else
@@ -60,16 +73,14 @@ void Rpc::http_request(uint json_tag)
     if (!auth_token.isEmpty())
     {
         qDebug() << "auth_token" << auth_token;
-        req->setRawHeader(QByteArray("X-Transmission-Session-Id"),auth_token);
+        req.setRawHeader(QByteArray("X-Transmission-Session-Id"),auth_token);
     }
 
-    QNetworkReply* reply = nam->post(*req,json_tracking[json_tag]);
+    QNetworkReply* reply = nam->post(req,json_tracking[json_tag]);
     Q_ASSERT(reply != NULL);
     qDebug() << "reply" << reply;
 
     http_tracking.insert(reply,json_tag);
-
-    if (req) delete req;
 }
 
 void Rpc::http_finished( QNetworkReply * reply )

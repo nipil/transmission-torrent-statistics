@@ -20,6 +20,7 @@ public:
     static bool exitRequested;
 
     explicit Tts(int &argc, char **argv);
+    virtual ~Tts();
     void loadSettings();
 
 signals:

@@ -31,6 +31,7 @@ class Rpc : public QObject
 
 public:
     explicit Rpc(QObject * p, QSettings * s);
+    virtual ~Rpc();
 
 signals:
     
