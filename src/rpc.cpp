@@ -64,7 +64,7 @@ void Rpc::http_request(QByteArray & query)
     }
 
     QNetworkReply* reply = nam->post(*req,query);
-    Q_ASSERT(reply == NULL);
+    Q_ASSERT(reply != NULL);
     requests.insert(reply,query);
 
     if (req) delete req;
