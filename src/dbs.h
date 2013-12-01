@@ -11,6 +11,8 @@ class Dbs : public QObject
     QSettings * settings;
     QSqlDatabase db;
 
+    void open();
+
 public:
     explicit Dbs(QObject * p, QSettings * s);
     virtual ~Dbs();
@@ -18,6 +20,7 @@ public:
 signals:
 
 public slots:
+    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name);
 
 };
 

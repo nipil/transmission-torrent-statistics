@@ -1,6 +1,5 @@
 #include <QtGlobal>
 #include <QDebug>
-#include <csignal>
 #include "common.h"
 #include "tts.h"
 
@@ -14,57 +13,29 @@
  * DEFINES += QT_NO_DEBUG_OUTPUT in .pro
  */
 
-void signal_handler(int signo)
-{
-    if (signo == SIGINT)
-    {
-        qDebug() << "SIGINT received";
-        Tts::exitRequested = true;
-    }
-    if (signo == SIGTERM)
-    {
-        qDebug() << "SIGTERM received";
-        Tts::exitRequested = true;
-    }
-    if (signo == SIGHUP)
-    {
-        qDebug() << "SIGHUP received";
-        Tts::reloadRequested = true;
-    }
-}
-
-bool signal_init()
-{
-    qDebug() << "Initializing signal handling";
-    if (signal(SIGINT,signal_handler) == SIG_ERR)
-    {
-        qCritical() << "Cannot register SIGINT";
-        return false;
-    }
-    if (signal(SIGTERM,signal_handler) == SIG_ERR)
-    {
-        qCritical() << "Cannot register SIGTERM";
-        return false;
-    }
-    if (signal(SIGHUP,signal_handler) == SIG_ERR)
-    {
-        qCritical() << "Cannot register SIGHUP";
-        return false;
-    }
-    return true;
-}
-
 int main(int argc, char *argv[])
 {
-    if (!signal_init())
-        return EXIT_SIGNAL_INITERROR;
+    try
+    {
+        int result;
 
-    qDebug() << "Initializing application";
-    Tts tts(argc, argv);
+        qDebug() << "Initializing application";
+        Tts tts(argc, argv);
 
-    qDebug() << "Starting event loop";
-    int result = tts.exec();
+        qDebug() << "Starting event loop";
+        result = tts.exec();
 
-    qDebug() << "Event loop ended with value" << result;
-    return result;
+        qDebug() << "Event loop ended with value" << result;
+        return result;
+    }
+    catch( int err )
+    {
+        qCritical() << "Main" << "Exception" << err;
+        return err;
+    }
+    catch( ... )
+    {
+        qCritical() << "Main" << "Untracked  exception occured";
+        return EXIT_UNKNOWN;
+    }
 }

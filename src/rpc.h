@@ -34,7 +34,8 @@ public:
     virtual ~Rpc();
 
 signals:
-    
+    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name);
+
 public slots:
     void poll();
     void http_finished( QNetworkReply * reply );

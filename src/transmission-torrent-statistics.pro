@@ -18,13 +18,15 @@ TEMPLATE = app
 SOURCES += main.cpp \
     tts.cpp \
     rpc.cpp \
-    dbs.cpp
+    dbs.cpp \
+    ttsig.cpp
 
 HEADERS += \
     tts.h \
     rpc.h \
     common.h \
-    dbs.h
+    dbs.h \
+    ttsig.h
 
 OTHER_FILES += \
     TODO

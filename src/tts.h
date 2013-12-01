@@ -26,10 +26,12 @@ public:
 
     void loadSettings();
 
+    virtual bool notify ( QObject * receiver, QEvent * event );
+
 signals:
     
 public slots:
-    void unixSignalCheck();
+    void signalCheck();
 
 };
 
