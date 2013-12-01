@@ -12,6 +12,8 @@
 #define TTS_SETTINGS_RPC_PASSWORD "RPC/Password"
 #define TTS_SETTINGS_RPC_SSL "RPC/SSL"
 
+#define TTS_SETTINGS_DB_NAME (TTS_APP_NAME ".sqlite")
+
 #define EXIT_SIGNAL_INITERROR 1
 
 #endif // COMMON_H

@@ -6,6 +6,7 @@
 #include <QTimer>
 
 #include "rpc.h"
+#include "dbs.h"
 
 class Tts : public QCoreApplication
 {
@@ -14,6 +15,7 @@ class Tts : public QCoreApplication
     QTimer * signalTimer;
     QTimer * pollingTimer;
     Rpc * rpc;
+    Dbs * dbs;
 
 public:
     static bool reloadRequested;
@@ -21,6 +23,7 @@ public:
 
     explicit Tts(int &argc, char **argv);
     virtual ~Tts();
+
     void loadSettings();
 
 signals:

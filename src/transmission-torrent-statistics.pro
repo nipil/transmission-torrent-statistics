@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core network
+QT       += core network sql
 
 QT       -= gui
 
@@ -17,12 +17,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     tts.cpp \
-    rpc.cpp
+    rpc.cpp \
+    dbs.cpp
 
 HEADERS += \
     tts.h \
     rpc.h \
-    common.h
+    common.h \
+    dbs.h
 
 OTHER_FILES += \
     TODO

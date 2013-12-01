@@ -20,6 +20,9 @@ Tts::Tts(int &argc, char **argv) :
     Q_ASSERT(settings != NULL);
     loadSettings();
 
+    dbs = new Dbs(this,settings);
+    Q_ASSERT(dbs != NULL);
+
     rpc = new Rpc(this,settings);
     Q_ASSERT(rpc != NULL);
 
@@ -40,6 +43,9 @@ Tts::Tts(int &argc, char **argv) :
 Tts::~Tts()
 {
     qDebug() << "Tts::~Tts";
+
+    if (dbs)
+        delete dbs;
 
     if (settings)
         delete settings;
