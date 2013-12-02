@@ -54,13 +54,14 @@ void Dbs::open()
 
     if (!tables.contains(TTS_DB_HASHTABLE_NAME))
         createMasterTable();
+
+    db.close();
 }
 
 void Dbs::close()
 {
     qDebug() << "Dbs::close";
 
-    QSqlDatabase::database(TTS_DB_CONNECTION_NAME).close();
     QSqlDatabase::removeDatabase(TTS_DB_CONNECTION_NAME);
 }
 
@@ -83,11 +84,18 @@ void Dbs::createMasterTable()
 {
     qDebug() << "Dbs::createMasterTable" << QSqlDatabase::connectionNames().join("/");
 
-    QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME);
+    QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
+
     if (!db.isValid())
     {
         qCritical() << "Could not find database connection" << db.lastError().text();
         throw EXIT_DB_CONNECTION_NOT_FOUND;
+    }
+
+    if (!db.isOpen())
+    {
+        qCritical() << "Database open error" << db.lastError().text();
+        throw EXIT_DB_OPEN;
     }
 
     // When using transactions, you must start the transaction before you create your query.
@@ -118,6 +126,8 @@ void Dbs::createMasterTable()
         qCritical() << "Could not commit transaction" << db.lastError().text();
         throw EXIT_DB_TRANSACTION_ERROR;
     }
+
+    db.close();
 
     tables.append(TTS_DB_HASHTABLE_NAME);
 }
