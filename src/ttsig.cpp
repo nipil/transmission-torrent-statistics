@@ -29,16 +29,16 @@ void signal_init()
     if (signal(SIGINT,signal_handler) == SIG_ERR)
     {
         qCritical() << "Cannot register SIGINT";
-        throw EXIT_SIGNAL_INITERROR;
+        throw EXIT_SIGNAL_INIT_ERROR;
     }
     if (signal(SIGTERM,signal_handler) == SIG_ERR)
     {
         qCritical() << "Cannot register SIGTERM";
-        throw EXIT_SIGNAL_INITERROR;
+        throw EXIT_SIGNAL_INIT_ERROR;
     }
     if (signal(SIGHUP,signal_handler) == SIG_ERR)
     {
         qCritical() << "Cannot register SIGHUP";
-        throw EXIT_SIGNAL_INITERROR;
+        throw EXIT_SIGNAL_INIT_ERROR;
     }
 }

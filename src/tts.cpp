@@ -100,7 +100,7 @@ void Tts::signalCheck()
         reloadRequested = false;
         qDebug() << "Tts::signalCheck reloadRequested";
         settings->sync();
-        // TODO: reopen database
+        dbs->reload();
     }
     if (exitRequested)
     {

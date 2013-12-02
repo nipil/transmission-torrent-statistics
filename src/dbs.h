@@ -3,19 +3,27 @@
 
 #include <QSettings>
 #include <QSqlDatabase>
+#include <QStringList>
 
 class Dbs : public QObject
 {
     Q_OBJECT
 
     QSettings * settings;
-    QSqlDatabase db;
+
+    QStringList tables;
 
     void open();
+    void close();
+
+    void createMasterTable();
+    void createHashTable(QString & hashString);
 
 public:
     explicit Dbs(QObject * p, QSettings * s);
     virtual ~Dbs();
+
+    void reload();
 
 signals:
 
