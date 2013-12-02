@@ -82,7 +82,28 @@ Dbs::~Dbs()
 
 void Dbs::createMasterTable()
 {
-    qDebug() << "Dbs::createMasterTable" << QSqlDatabase::connectionNames().join("/");
+    qDebug() << "Dbs::createMasterTable";
+
+    simpleQuery("CREATE TABLE "
+                TTS_DB_HASHTABLE_NAME
+                "(hash VARCHAR(255),"
+                "name VARCHAR(255),"
+                "primary KEY (hash));");
+
+    tables.append(TTS_DB_HASHTABLE_NAME);
+}
+
+void Dbs::simpleQuery(QString sql)
+{
+    qDebug() << "Dbs::simpleQuery";
+
+    QSqlQuery * q = query(sql);
+    if (q) delete q;
+}
+
+QSqlQuery * Dbs::query(QString sql)
+{
+    qDebug() << "Dbs::query" << sql;
 
     QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
 
@@ -105,31 +126,28 @@ void Dbs::createMasterTable()
         throw EXIT_DB_TRANSACTION_ERROR;
     }
 
-    // do some stuff
-    QSqlQuery query("",db);
-    bool ok = query.exec(
-                "CREATE TABLE "
-                TTS_DB_HASHTABLE_NAME
-                "(hash VARCHAR(255),"
-                "name VARCHAR(255),"
-                "primary KEY (hash));"
-    );
+    QSqlQuery * query = new QSqlQuery("",db);
+    Q_ASSERT(query != NULL);
+
+    bool ok = query->exec( sql );
 
     if (!ok)
     {
-        qCritical() << "Could not create table" << query.lastError().text();
-        throw EXIT_DB_CREATE_TABLE_FAILED;
+        qCritical() << "Query failed" << query->lastError().text();
+        if (query) delete query;
+        throw EXIT_DB_QUERY_FAILED;
     }
 
     if (!db.commit())
     {
         qCritical() << "Could not commit transaction" << db.lastError().text();
+        if (query) delete query;
         throw EXIT_DB_TRANSACTION_ERROR;
     }
 
     db.close();
 
-    tables.append(TTS_DB_HASHTABLE_NAME);
+    return query;
 }
 
 void Dbs::createHashTable(QString & hashString)

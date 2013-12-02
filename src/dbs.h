@@ -16,6 +16,9 @@ class Dbs : public QObject
     void open();
     void close();
 
+    void simpleQuery(QString sql);
+    QSqlQuery * query(QString sql);
+
     void createMasterTable();
     void createHashTable(QString & hashString);
 
