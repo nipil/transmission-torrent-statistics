@@ -8,6 +8,7 @@
 
 #define TTS_DB_CONNECTION_NAME TTS_APP_NAME
 #define TTS_DB_HASHTABLE_NAME "master"
+#define TTS_DB_HASH_PREFIX "torrent"
 #define TTS_DB_DRIVER "QSQLITE"
 
 #define TTS_SETTINGS_RPC_HOST "RPC/Host"

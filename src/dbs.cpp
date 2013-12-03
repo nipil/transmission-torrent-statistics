@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QDateTime>
 #include "common.h"
 #include "dbs.h"
 
@@ -49,11 +50,13 @@ void Dbs::open()
         throw EXIT_DB_TRANSACTION_ERROR;
     }
 
-    tables = db.tables();
-    qDebug() << "Tables are :" << tables.join("\n");
+    known_tables = db.tables();
+    qDebug() << "Tables are :" << known_tables.join("\n");
 
-    if (!tables.contains(TTS_DB_HASHTABLE_NAME))
+    if (!known_tables.contains(TTS_DB_HASHTABLE_NAME))
         createMasterTable();
+
+    loadMasterHashes();
 
     db.close();
 }
@@ -80,30 +83,9 @@ Dbs::~Dbs()
     close();
 }
 
-void Dbs::createMasterTable()
+QSqlQuery * Dbs::initQuery(bool transaction)
 {
-    qDebug() << "Dbs::createMasterTable";
-
-    simpleQuery("CREATE TABLE "
-                TTS_DB_HASHTABLE_NAME
-                "(hash VARCHAR(255),"
-                "name VARCHAR(255),"
-                "primary KEY (hash));");
-
-    tables.append(TTS_DB_HASHTABLE_NAME);
-}
-
-void Dbs::simpleQuery(QString sql)
-{
-    qDebug() << "Dbs::simpleQuery";
-
-    QSqlQuery * q = query(sql);
-    if (q) delete q;
-}
-
-QSqlQuery * Dbs::query(QString sql)
-{
-    qDebug() << "Dbs::query" << sql;
+    qDebug() << "Dbs::initQuery" << transaction;
 
     QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
 
@@ -120,16 +102,29 @@ QSqlQuery * Dbs::query(QString sql)
     }
 
     // When using transactions, you must start the transaction before you create your query.
-    if (!db.transaction())
+    if (transaction && false)
     {
-        qCritical() << "Could not start transaction" << db.lastError().text();
-        throw EXIT_DB_TRANSACTION_ERROR;
+        if (!db.transaction())
+        {
+            qCritical() << "Could not start transaction" << db.lastError().text();
+            throw EXIT_DB_TRANSACTION_ERROR;
+        }
     }
 
     QSqlQuery * query = new QSqlQuery("",db);
     Q_ASSERT(query != NULL);
 
-    bool ok = query->exec( sql );
+    return query;
+}
+
+void Dbs::execQuery(QSqlQuery * query)
+{
+    qDebug() << "Dbs::execQuery" << query;
+
+    Q_ASSERT(query != NULL);
+    bool ok = query->exec();
+
+    qDebug() << "sql" << query->lastQuery();
 
     if (!ok)
     {
@@ -137,34 +132,138 @@ QSqlQuery * Dbs::query(QString sql)
         if (query) delete query;
         throw EXIT_DB_QUERY_FAILED;
     }
-
-    if (!db.commit())
-    {
-        qCritical() << "Could not commit transaction" << db.lastError().text();
-        if (query) delete query;
-        throw EXIT_DB_TRANSACTION_ERROR;
-    }
-
-    db.close();
-
-    return query;
 }
 
-void Dbs::createHashTable(QString & hashString)
+void Dbs::cleanupQuery(QSqlQuery * query, bool transaction)
 {
-    qDebug() << "Dbs::createHashTable" << hashString;
+    qDebug() << "Dbs::cleanupQuery" << query << transaction;
 
+    if (query) delete query;
 
+    if (transaction && false)
+    {
+        QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
+        if (!db.commit())
+        {
+            qCritical() << "Could not commit transaction" << db.lastError().text();
+            throw EXIT_DB_TRANSACTION_ERROR;
+        }
+    }
+}
 
+void Dbs::createMasterTable()
+{
+    qDebug() << "Dbs::createMasterTable";
 
+    QSqlQuery * q = initQuery(true);
+    QString sql = QString("CREATE TABLE %1"
+                          "(hash VARCHAR(255),"
+                          "name VARCHAR(255),"
+                          "primary KEY (hash));"
+                          ).arg(TTS_DB_HASHTABLE_NAME);
+    q->prepare(sql);
+    execQuery(q);
+    cleanupQuery(q,true);
+
+    known_tables.append(TTS_DB_HASHTABLE_NAME);
+}
+
+void Dbs::insertMasterTable(QString & hashString, QString & name)
+{
+    qDebug() << "Dbs::insertMasterTable" << hashString << name;
+
+    QSqlQuery * q = initQuery(true);
+    QString sql = QString("INSERT OR REPLACE INTO %1"
+                          "(hash,name) "
+                          "VALUES( :hash, :name );"
+                          ).arg(TTS_DB_HASHTABLE_NAME);
+    q->prepare(sql);
+    q->bindValue(":hash", hashString);
+    q->bindValue(":name", name);
+    execQuery(q);
+    cleanupQuery(q,true);
+
+    known_hashes.append(hashString);
+}
+
+void Dbs::loadMasterHashes()
+{
+    qDebug() << "Dbs::loadMasterHashes";
+
+    QSqlQuery * q = initQuery(false);
+    QString sql = QString("SELECT hash FROM %1;"
+                          ).arg(TTS_DB_HASHTABLE_NAME);
+    q->prepare(sql);
+    execQuery(q);
+
+    known_hashes.clear();
+    while (q->next())
+    {
+        QString hash = q->value(0).toString();
+        qDebug() << "hash" << hash;
+        known_hashes.append(hash);
+    }
+
+    cleanupQuery(q,false);
+}
+
+QString Dbs::hashToTable(QString & hashString)
+{
+    return QString("%1_%2").arg(TTS_DB_HASH_PREFIX).arg(hashString);
+}
+
+void Dbs::createHashTable(QString & tableName)
+{
+    qDebug() << "Dbs::createHashTable" << tableName;
+
+    QSqlQuery * q = initQuery(true);
+    QString sql = QString("CREATE TABLE %1"
+                          "(unixtime INTEGER(32),"
+                          "downloadedEver INTEGER(32),"
+                          "uploadedEver INTEGER(32));"
+                          ).arg(tableName);
+    q->prepare(sql);
+    execQuery(q);
+    cleanupQuery(q,true);
+
+    known_tables.append(tableName);
+}
+
+void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver)
+{
+    qDebug() << "Dbs::insertHashTable" << tableName << "T" << unixtime << "D" << downloadedEver << "U" << uploadedEver;
+
+    QSqlQuery * q = initQuery(true);
+    QString sql = QString("INSERT OR REPLACE INTO %1"
+                          "(unixtime,downloadedEver,uploadedEver) "
+                          "VALUES( :unixtime, :downloadedEver, :uploadedEver);"
+                          ).arg(tableName);
+    q->prepare(sql);
+    q->bindValue(":unixtime", unixtime);
+    q->bindValue(":downloadedEver", downloadedEver);
+    q->bindValue(":uploadedEver", uploadedEver);
+    execQuery(q);
+    cleanupQuery(q,true);
 }
 
 void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name)
 {
-    qDebug() << "Dbs::store";
+    qDebug() << "Dbs::store" << hashString << downloadedEver << uploadedEver << name;
 
-    if (!tables.contains(hashString))
-        createHashTable(hashString);
+    // if not yet known, insert this torrent hash in master hash list
+    if (!known_hashes.contains(hashString))
+    {
+        insertMasterTable(hashString,name);
+    }
 
+    QString tableName = hashToTable(hashString);
+
+    // if storage table for this torrent hash doesn't exist, create it
+    if (!known_tables.contains(tableName))
+    {
+        createHashTable(tableName);
+    }
+
+    uint unixtime = QDateTime::currentDateTime().toTime_t();
+    insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
 }
-

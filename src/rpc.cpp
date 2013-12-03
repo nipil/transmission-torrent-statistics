@@ -1,6 +1,7 @@
 #include <QtGlobal>
 #include <QDebug>
 #include <QStringList>
+#include <QDateTime>
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
 #include "common.h"
@@ -236,6 +237,8 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
 {
     qDebug() << "Rpc::tbt_everstats_result";
 
+    QDateTime t_start = QDateTime::currentDateTime();
+
     Q_ASSERT(arguments.type() == QVariant::Map);
     QVariantMap am = arguments.toMap();
 
@@ -266,4 +269,7 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
         qDebug() << hashString << downloadedEver << uploadedEver << name;
         emit store(hashString, downloadedEver, uploadedEver, name);
     }
+
+    QDateTime t_end = QDateTime::currentDateTime();
+    qDebug() << "Poll duration" << t_start.msecsTo(t_end) << "ms";
 }

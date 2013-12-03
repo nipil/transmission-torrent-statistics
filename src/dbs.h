@@ -11,16 +11,23 @@ class Dbs : public QObject
 
     QSettings * settings;
 
-    QStringList tables;
+    QStringList known_tables;
+    QStringList known_hashes;
 
     void open();
     void close();
 
-    void simpleQuery(QString sql);
-    QSqlQuery * query(QString sql);
+    QSqlQuery * initQuery(bool transaction);
+    void execQuery(QSqlQuery * query);
+    void cleanupQuery(QSqlQuery * query, bool transaction);
 
+    void loadMasterHashes();
+
+    QString hashToTable(QString & hashString);
     void createMasterTable();
+    void insertMasterTable(QString & hashString, QString & name);
     void createHashTable(QString & hashString);
+    void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
 
 public:
     explicit Dbs(QObject * p, QSettings * s);

@@ -8,6 +8,8 @@ QT       += core network sql
 
 QT       -= gui
 
+# DEFINES += QT_NO_DEBUG QT_NO_DEBUG_OUTPUT NDEBUG
+
 TARGET = transmission-torrent-statistics
 CONFIG   += console
 CONFIG   -= app_bundle
