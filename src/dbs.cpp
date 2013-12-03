@@ -50,6 +50,8 @@ void Dbs::open()
         throw EXIT_DB_TRANSACTION_ERROR;
     }
 
+    setWriteMode(WriteOff);
+
     known_tables = db.tables();
     qDebug() << "Tables are :" << known_tables.join("\n");
 
@@ -81,6 +83,20 @@ Dbs::~Dbs()
     qDebug() << "Dbs::~Dbs";
 
     close();
+}
+
+void Dbs::setWriteMode(SqliteWriteMode mode)
+{
+    qDebug() << "Dbs::setWriteMode" << mode;
+
+    // Change sqlite safe-write policy :
+    // OFF = delegate syncing to system
+    // NORMAL = sync at most critical
+    // FULL = safest blocking sync
+    QSqlQuery * q = initQuery(false);
+    q->prepare(QString("PRAGMA synchronous = %1;").arg(mode));
+    execQuery(q);
+    cleanupQuery(q,false);
 }
 
 QSqlQuery * Dbs::initQuery(bool transaction)

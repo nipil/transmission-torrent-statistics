@@ -9,6 +9,12 @@ class Dbs : public QObject
 {
     Q_OBJECT
 
+    enum SqliteWriteMode {
+        WriteOff = 0,
+        WriteNormal = 1,
+        WriteFull = 2
+    };
+
     QSettings * settings;
 
     QStringList known_tables;
@@ -16,6 +22,8 @@ class Dbs : public QObject
 
     void open();
     void close();
+
+    void setWriteMode(SqliteWriteMode mode);
 
     QSqlQuery * initQuery(bool transaction);
     void execQuery(QSqlQuery * query);
