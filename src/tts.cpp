@@ -30,7 +30,8 @@ Tts::Tts(int &argc, char **argv) :
     rpc = new Rpc(this,settings);
     Q_ASSERT(rpc != NULL);
 
-    bool r1 = connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&)), dbs, SLOT(store(QString&,qlonglong,qlonglong,QString&)));
+    bool r1 = connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
+                      dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint)));
     Q_ASSERT(r1 == true);
 
     signalTimer = new QTimer(this);

@@ -246,7 +246,7 @@ void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong download
     cleanupQuery(q,true);
 }
 
-void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name)
+void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name, uint unixtime)
 {
     qDebug() << "Dbs::store" << hashString << downloadedEver << uploadedEver << name;
 
@@ -264,6 +264,5 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
         createHashTable(tableName);
     }
 
-    uint unixtime = QDateTime::currentDateTime().toTime_t();
     insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
 }

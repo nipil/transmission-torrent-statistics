@@ -34,7 +34,7 @@ public:
     virtual ~Rpc();
 
 signals:
-    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name);
+    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name, uint unixtime);
 
 public slots:
     void poll();

@@ -267,9 +267,9 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
         QString name = mt["name"].toString();
 
         qDebug() << hashString << downloadedEver << uploadedEver << name;
-        emit store(hashString, downloadedEver, uploadedEver, name);
+        emit store(hashString, downloadedEver, uploadedEver, name, t_start.toTime_t());
     }
 
     QDateTime t_end = QDateTime::currentDateTime();
-    qDebug() << "Poll duration" << t_start.msecsTo(t_end) << "ms";
+    qDebug() << "Storage duration" << t_start.msecsTo(t_end) << "ms";
 }

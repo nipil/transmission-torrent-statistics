@@ -38,7 +38,7 @@ public:
 signals:
 
 public slots:
-    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name);
+    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name, uint unixtime);
 
 };
 
