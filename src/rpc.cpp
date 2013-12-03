@@ -109,7 +109,7 @@ void Rpc::http_finished( QNetworkReply * reply )
 
     case QNetworkReply::ConnectionRefusedError:
         qCritical() << "Could not contact host";
-        throw EXIT_CONNECTION_REFUSED;
+        break;
 
     case QNetworkReply::AuthenticationRequiredError:
         if (httpcode == 401)
