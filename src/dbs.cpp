@@ -102,7 +102,7 @@ QSqlQuery * Dbs::initQuery(bool transaction)
     }
 
     // When using transactions, you must start the transaction before you create your query.
-    if (transaction && false)
+    if (transaction)
     {
         if (!db.transaction())
         {
@@ -140,7 +140,7 @@ void Dbs::cleanupQuery(QSqlQuery * query, bool transaction)
 
     if (query) delete query;
 
-    if (transaction && false)
+    if (transaction)
     {
         QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
         if (!db.commit())
