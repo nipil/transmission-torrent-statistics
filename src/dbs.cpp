@@ -50,8 +50,6 @@ void Dbs::open()
         throw EXIT_DB_TRANSACTION_ERROR;
     }
 
-    setWriteMode(WriteOff);
-
     known_tables = db.tables();
     qDebug() << "Tables are :" << known_tables.join("\n");
 
@@ -85,20 +83,6 @@ Dbs::~Dbs()
     close();
 }
 
-void Dbs::setWriteMode(SqliteWriteMode mode)
-{
-    qDebug() << "Dbs::setWriteMode" << mode;
-
-    // Change sqlite safe-write policy :
-    // OFF = delegate syncing to system
-    // NORMAL = sync at most critical
-    // FULL = safest blocking sync
-    QSqlQuery * q = initQuery(false);
-    q->prepare(QString("PRAGMA synchronous = %1;").arg(mode));
-    execQuery(q);
-    cleanupQuery(q,false);
-}
-
 QSqlQuery * Dbs::initQuery(bool transaction)
 {
     qDebug() << "Dbs::initQuery" << transaction;
@@ -116,6 +100,12 @@ QSqlQuery * Dbs::initQuery(bool transaction)
         qCritical() << "Database open error" << db.lastError().text();
         throw EXIT_DB_OPEN;
     }
+
+    /*
+     *turn off sqlite write sync for each query to speed things up 100x
+     *see https://www.sqlite.org/pragma.html#pragma_synchronous
+     */
+    QSqlQuery q(QString("PRAGMA synchronous = %1;").arg(WriteOff),db);
 
     // When using transactions, you must start the transaction before you create your query.
     if (transaction)

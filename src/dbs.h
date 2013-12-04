@@ -23,8 +23,6 @@ class Dbs : public QObject
     void open();
     void close();
 
-    void setWriteMode(SqliteWriteMode mode);
-
     QSqlQuery * initQuery(bool transaction);
     void execQuery(QSqlQuery * query);
     void cleanupQuery(QSqlQuery * query, bool transaction);
