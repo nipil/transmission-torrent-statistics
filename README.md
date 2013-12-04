@@ -2,12 +2,16 @@
 
 A QT-based daemon polling transmission instances via RPC at regular intervals. Fetches cumulated upload and download amounts for each torrent. Stores these information in a database for later use.
 
-## Build prerequisite
+## Dependancies
 
-On Debian-like systems
+On Debian-like systems where you build it
 - qt-sdk
-- libsqlite3
 - libqjson-dev
+
+On Debian-like systems where you run it
+- libqt4-network
+- libqt4-sql-sqlite
+- libqjson
 
 ## Configuration
 
