@@ -21,14 +21,16 @@ SOURCES += main.cpp \
     tts.cpp \
     rpc.cpp \
     dbs.cpp \
-    ttsig.cpp
+    ttsig.cpp \
+    web.cpp
 
 HEADERS += \
     tts.h \
     rpc.h \
     common.h \
     dbs.h \
-    ttsig.h
+    ttsig.h \
+    web.h
 
 OTHER_FILES += \
     TODO

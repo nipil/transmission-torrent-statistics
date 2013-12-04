@@ -7,6 +7,7 @@
 
 #include "rpc.h"
 #include "dbs.h"
+#include "web.h"
 
 class Tts : public QCoreApplication
 {
@@ -16,6 +17,7 @@ class Tts : public QCoreApplication
     QTimer * pollingTimer;
     Rpc * rpc;
     Dbs * dbs;
+    Web * web;
 
 public:
     static bool reloadRequested;
