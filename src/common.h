@@ -26,6 +26,8 @@
 #define TTS_SETTINGS_DB_PATH_DEFAULT QDir::homePath()
 #define TTS_SETTINGS_WEB_PATH_DEFAULT QDir::homePath()
 
+#define TTS_BUFFER_SIZE (1 << 15)
+
 #define EXIT_UNKNOWN 255
 #define EXIT_OK 0
 #define EXIT_SIGNAL_INIT_ERROR 1

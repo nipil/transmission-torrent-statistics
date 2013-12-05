@@ -160,19 +160,51 @@ void Web::serveFile(QTcpSocket * socket, QString & path)
         return;
     }
 
+    replyHeader(socket,"HTTP/1.1 200 OK",file.size());
+
+    while(!file.atEnd())
+    {
+        QByteArray buffer = file.read(TTS_BUFFER_SIZE);
+        qDebug() << "Read" << buffer.size() << "bytes from file";
+        replyData(socket, buffer);
+    }
+
     file.close();
 }
 
 void Web::reply(QTcpSocket * socket, QString http_result, QString message)
 {
-    qDebug() << "Web::simpleReply" << http_result << message;
+    qDebug() << "Web::reply" << http_result << message;
 
-    QTextStream output(socket);
-    output <<  QString("%1\r\n"
-                       "Content-Length: %2\r\n"
-                       "\r\n"
-                       "%3")
-               .arg(http_result)
-               .arg(message.length())
-               .arg(message);
+    replyHeader(socket, http_result, message.size());
+
+    QByteArray data = message.toUtf8();
+    replyData(socket, data);
+}
+
+void Web::replyHeader(QTcpSocket * socket, QString http_result, qint64 size)
+{
+    qDebug() << "Web::replyHeader" << http_result << size;
+
+    QByteArray data (QString("%1\r\n"
+                             "Content-Length: %2\r\n"
+                             "\r\n")
+                     .arg(http_result)
+                     .arg(size)
+                     .toUtf8());
+
+    replyData(socket, data);
+}
+
+void Web::replyData(QTcpSocket * socket, QByteArray & buffer)
+{
+    qDebug() << "Web::replyData" << socket << buffer.size();
+
+    qint64 written = 0;
+    do
+    {
+        written = socket->write(buffer.constData() + written,
+                                buffer.size() - written);
+        qDebug() << "Wrote" << written << "bytes to socket";
+    } while (written < buffer.size());
 }

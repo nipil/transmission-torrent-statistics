@@ -15,6 +15,8 @@ class Web : public QTcpServer
     void serve(QTcpSocket * socket, QString & localPath);
     void serveFile(QTcpSocket * socket, QString & path);
     void reply(QTcpSocket * socket, QString http_result, QString message);
+    void replyData(QTcpSocket * socket, QByteArray & buffer);
+    void replyHeader(QTcpSocket * socket, QString http_result, qint64 size);
 
 public:
     explicit Web(QObject *parent, QSettings * s);
