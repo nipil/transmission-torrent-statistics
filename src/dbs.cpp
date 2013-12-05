@@ -4,6 +4,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDateTime>
+#include <qjson/serializer.h>
 #include "common.h"
 #include "dbs.h"
 
@@ -273,14 +274,55 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
     insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
 }
 
-void Dbs::jsonList(QIODevice * out)
+void Dbs::jsonList(QByteArray & out)
 {
-    qDebug() << "Dbs::jsonList" << out;
+    qDebug() << "Dbs::jsonList";
 
+    QSqlQuery * q = initQuery(false);
+    QString sql = QString("SELECT hash,name FROM %1;").arg(TTS_DB_HASHTABLE_NAME);
+    q->prepare(sql);
+    execQuery(q);
+
+    QVariantList torrents;
+    while (q->next())
+    {
+        QVariantMap torrent;
+        torrent.insert("hash",q->value(0).toString());
+        torrent.insert("name",q->value(1).toString());
+        torrents << torrent;
+    }
+
+    cleanupQuery(q,false);
+
+    QJson::Serializer s;
+    out = s.serialize(torrents);
 }
 
-void Dbs::jsonStats(QIODevice * out, QString & torrent, uint time_min, uint time_max)
+void Dbs::jsonStats(QByteArray & out, QString & hashString, uint time_min, uint time_max)
 {
-    qDebug() << "Dbs::jsonStats" << out << torrent << time_min << time_max;
+    qDebug() << "Dbs::jsonStats" << hashString << time_min << time_max;
 
+    QSqlQuery * q = initQuery(false);
+    QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+                          "WHERE :time_min < unixtime AND unixtime < :time_max "
+                          "ORDER BY unixtime ASC;").arg(hashToTable(hashString));
+    q->prepare(sql);
+    q->bindValue(":time_min",time_min);
+    q->bindValue(":time_max",time_max);
+    execQuery(q);
+
+    QVariantList torrents;
+    while (q->next())
+    {
+        QVariantMap torrent;
+        torrent.insert("t",q->value(0).toString());
+        torrent.insert("d",q->value(1).toString());
+        torrent.insert("u",q->value(2).toString());
+        torrents << torrent;
+    }
+
+    cleanupQuery(q,false);
+
+    QJson::Serializer s;
+    out = s.serialize(torrents);
 }

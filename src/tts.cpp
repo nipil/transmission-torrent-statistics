@@ -37,12 +37,12 @@ Tts::Tts(int &argc, char **argv) :
                       dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint)));
     Q_ASSERT(r1 == true);
 
-    bool w1 = connect(web,SIGNAL(jsonList(QIODevice*)),
-                      dbs,  SLOT(jsonList(QIODevice*)));
+    bool w1 = connect(web,SIGNAL(jsonList(QByteArray&)),
+                      dbs,  SLOT(jsonList(QByteArray&)));
     Q_ASSERT(w1 == true);
 
-    bool w2 = connect(web,SIGNAL(jsonStats(QIODevice*,QString&,uint,uint)),
-                      dbs,  SLOT(jsonStats(QIODevice*,QString&,uint,uint)));
+    bool w2 = connect(web,SIGNAL(jsonStats(QByteArray&,QString&,uint,uint)),
+                      dbs,  SLOT(jsonStats(QByteArray&,QString&,uint,uint)));
     Q_ASSERT(w2 == true);
 
     signalTimer = new QTimer(this);
