@@ -109,6 +109,8 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
         QByteArray result;
         emit jsonList(result);
         qDebug() << "jsonList" << result;
+        replyHeader(socket,"HTTP/1.1 200 OK",result.size());
+        replyData(socket, result);
     }
     else if (re_data.exactMatch(localPath))
     {
@@ -137,6 +139,8 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
         QByteArray result;
         emit jsonStats(result, hashString, time_from, time_to);
         qDebug() << "jsonStats" << result;
+        replyHeader(socket,"HTTP/1.1 200 OK",result.size());
+        replyData(socket, result);
     }
     else
     {
