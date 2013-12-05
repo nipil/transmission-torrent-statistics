@@ -152,6 +152,8 @@ void Web::serveFile(QTcpSocket * socket, QString & path)
 {
     qDebug() << "Web::serveFile" << socket << path;
 
+    if (path == "/") path = "/index.html";
+
     QFile file( settings->value(TTS_SETTINGS_WEB_PATH).toString() + path );
     if (!file.exists())
     {
