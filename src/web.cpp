@@ -96,12 +96,12 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
 
     // RPC: request list of known torrents
     // url /list
-    QRegExp re_list("/list[/]?");
+    QRegExp re_list("/json/list[/]?");
     Q_ASSERT(re_list.isValid() == true);
 
     // RPC: request torrent stats (up/down total)
     // url /hash/fromTime/toTime
-    QRegExp re_data("/([0-9a-fA-F]+)/([0-9]+)/([0-9]+)[/]?");
+    QRegExp re_data("/json/([0-9a-fA-F]+)/([0-9]+)/([0-9]+)[/]?");
     Q_ASSERT(re_data.isValid() == true);
 
     if (re_list.exactMatch(localPath))
