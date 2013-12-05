@@ -12,17 +12,18 @@ class Web : public QTcpServer
 
     QSettings * settings;
 
-    void serve(QTextStream & output, QString & localPath);
-    void serveFile(QTextStream & output, QString & path);
-    void serveList(QTextStream & output);
-    void serveStats(QTextStream & output, QString & torrent, uint time_min, uint time_max);
+    void serve(QTcpSocket * socket, QString & localPath);
+    void serveFile(QTcpSocket * socket, QString & path);
+    void reply(QTcpSocket * socket, QString http_result, QString message);
 
 public:
     explicit Web(QObject *parent, QSettings * s);
     virtual ~Web();
 
 signals:
-    
+    void jsonList(QIODevice * out);
+    void jsonStats(QIODevice * out, QString & torrent, uint time_min, uint time_max);
+
 public slots:
      void newConnection();
      void readyRead();

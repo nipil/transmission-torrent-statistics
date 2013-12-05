@@ -37,6 +37,14 @@ Tts::Tts(int &argc, char **argv) :
                       dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint)));
     Q_ASSERT(r1 == true);
 
+    bool w1 = connect(web,SIGNAL(jsonList(QIODevice*)),
+                      dbs,  SLOT(jsonList(QIODevice*)));
+    Q_ASSERT(w1 == true);
+
+    bool w2 = connect(web,SIGNAL(jsonStats(QIODevice*,QString&,uint,uint)),
+                      dbs,  SLOT(jsonStats(QIODevice*,QString&,uint,uint)));
+    Q_ASSERT(w2 == true);
+
     signalTimer = new QTimer(this);
     Q_ASSERT(signalTimer != NULL);
 
@@ -90,9 +98,9 @@ void Tts::loadSettings()
     params.insert(TTS_SETTINGS_RPC_PASSWORD, QString(""));
     params.insert(TTS_SETTINGS_RPC_SSL, bool(false));
     params.insert(TTS_SETTINGS_DB_NAME, (TTS_APP_NAME ".sqlite") );
-    params.insert(TTS_SETTINGS_DB_PATH, QDir::homePath ());
+    params.insert(TTS_SETTINGS_DB_PATH, TTS_SETTINGS_DB_PATH_DEFAULT);
     params.insert(TTS_SETTINGS_WEB_PORT, int(4646));
-    params.insert(TTS_SETTINGS_WEB_PATH, QDir::homePath ());
+    params.insert(TTS_SETTINGS_WEB_PATH, TTS_SETTINGS_WEB_PATH_DEFAULT);
 
     QMap<QString,QVariant>::const_iterator i;
     for (i=params.begin();i!=params.end();i++)

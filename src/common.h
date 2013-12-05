@@ -23,6 +23,9 @@
 #define TTS_SETTINGS_WEB_PORT "WebServer/Port"
 #define TTS_SETTINGS_WEB_PATH "WebServer/Path"
 
+#define TTS_SETTINGS_DB_PATH_DEFAULT QDir::homePath()
+#define TTS_SETTINGS_WEB_PATH_DEFAULT QDir::homePath()
+
 #define EXIT_UNKNOWN 255
 #define EXIT_OK 0
 #define EXIT_SIGNAL_INIT_ERROR 1

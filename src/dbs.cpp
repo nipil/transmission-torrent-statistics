@@ -272,3 +272,15 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
 
     insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
 }
+
+void Dbs::jsonList(QIODevice * out)
+{
+    qDebug() << "Dbs::jsonList" << out;
+
+}
+
+void Dbs::jsonStats(QIODevice * out, QString & torrent, uint time_min, uint time_max)
+{
+    qDebug() << "Dbs::jsonStats" << out << torrent << time_min << time_max;
+
+}

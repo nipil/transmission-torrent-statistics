@@ -46,6 +46,8 @@ signals:
 public slots:
     void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name, uint unixtime);
 
+    void jsonList(QIODevice * out);
+    void jsonStats(QIODevice * out, QString & torrent, uint time_min, uint time_max);
 };
 
 #endif // DBS_H

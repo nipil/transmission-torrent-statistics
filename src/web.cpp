@@ -84,14 +84,13 @@ void Web::readyRead()
 
         if (tokens[0].toLower() == "get")
         {
-            QTextStream output(t);
-            output.setAutoDetectUnicode(true); // this is the default
-            serve(output, tokens[1]);
+            serve(t, tokens[1]);
+            t->flush();
         }
     }
 }
 
-void Web::serve(QTextStream & output, QString & localPath)
+void Web::serve(QTcpSocket * socket, QString & localPath)
 {
     qDebug() << "Web::serve" << localPath;
 
@@ -107,14 +106,15 @@ void Web::serve(QTextStream & output, QString & localPath)
 
     if (re_list.exactMatch(localPath))
     {
-        serveList(output);
+        emit jsonList(socket);
     }
     else if (re_data.exactMatch(localPath))
     {
         bool ok;
-        QString hashString = re_data.cap(0);
-        QString fromTime = re_data.cap(1);
-        QString toTime = re_data.cap(2);
+        qDebug() << "Captured texts" << re_data.capturedTexts();
+        QString hashString = re_data.cap(1);
+        QString fromTime = re_data.cap(2);
+        QString toTime = re_data.cap(3);
         uint time_from = fromTime.toUInt(&ok);
         if (!ok)
         {
@@ -127,36 +127,52 @@ void Web::serve(QTextStream & output, QString & localPath)
             qCritical() << "Cannot convert toTime" << toTime << "to uint";
             throw EXIT_WEB_CONVERT_ERROR;
         }
-        if (fromTime > toTime)
+        if (time_from > time_to)
         {
-            // TODO: return html error with message
+            reply(socket,"HTTP/1.1 400 Bad Request","Error: fromTime > toTime");
             return;
         }
-        serveStats(output, hashString, time_from, time_to);
+        emit jsonStats(socket, hashString, time_from, time_to);
     }
     else
     {
-        serveFile(output, localPath);
+        serveFile(socket, localPath);
     }
 }
 
-void Web::serveFile(QTextStream & output, QString & path)
+void Web::serveFile(QTcpSocket * socket, QString & path)
 {
-    qDebug() << "Web::serveFile" << path;
+    qDebug() << "Web::serveFile" << socket << path;
 
-    QDir base(settings->value(TTS_SETTINGS_WEB_PATH).toString());
-    qDebug() << "Serving static page from" << base;
+    QFile file( settings->value(TTS_SETTINGS_WEB_PATH).toString() + path );
+    if (!file.exists())
+    {
+        reply(socket,"HTTP/1.1 404 Not Found","Error: not found");
+        return;
+    }
 
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        reply(socket,"HTTP/1.1 403 Forbidden",
+              QString("FileError %1: %2")
+              .arg(file.error())
+              .arg(file.errorString()));
+        return;
+    }
+
+    file.close();
 }
 
-void Web::serveList(QTextStream & output)
+void Web::reply(QTcpSocket * socket, QString http_result, QString message)
 {
-    qDebug() << "Web::serveList";
+    qDebug() << "Web::simpleReply" << http_result << message;
 
-}
-
-void Web::serveStats(QTextStream & output, QString & torrent, uint time_min, uint time_max)
-{
-    qDebug() << "Web::serveStats" << torrent << time_min << time_max;
-
+    QTextStream output(socket);
+    output <<  QString("%1\r\n"
+                       "Content-Length: %2\r\n"
+                       "\r\n"
+                       "%3")
+               .arg(http_result)
+               .arg(message.length())
+               .arg(message);
 }
