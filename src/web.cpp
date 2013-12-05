@@ -74,7 +74,7 @@ void Web::readyRead()
 
     /* based on http://doc.qt.digia.com/solutions/4/qtservice/qtservice-example-server.html */
 
-    if (t->canReadLine())
+    while (t->canReadLine())
     {
         QString buff = t->readLine();
         qDebug() << "Line" << buff;
