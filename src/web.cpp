@@ -106,7 +106,9 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
 
     if (re_list.exactMatch(localPath))
     {
-        emit jsonList(socket);
+        QByteArray result;
+        emit jsonList(result);
+        qDebug() << "jsonList" << result;
     }
     else if (re_data.exactMatch(localPath))
     {
@@ -132,7 +134,9 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
             reply(socket,"HTTP/1.1 400 Bad Request","Error: fromTime > toTime");
             return;
         }
-        emit jsonStats(socket, hashString, time_from, time_to);
+        QByteArray result;
+        emit jsonStats(result, hashString, time_from, time_to);
+        qDebug() << "jsonStats" << result;
     }
     else
     {

@@ -21,8 +21,8 @@ public:
     virtual ~Web();
 
 signals:
-    void jsonList(QIODevice * out);
-    void jsonStats(QIODevice * out, QString & torrent, uint time_min, uint time_max);
+    void jsonList(QByteArray & out);
+    void jsonStats(QByteArray & out, QString & hashString, uint time_min, uint time_max);
 
 public slots:
      void newConnection();
