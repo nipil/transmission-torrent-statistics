@@ -30,9 +30,20 @@ Tts::Tts(int &argc, char **argv) :
     rpc = new Rpc(this,settings);
     Q_ASSERT(rpc != NULL);
 
+    web = new Web(this,settings);
+    Q_ASSERT(web != NULL);
+
     bool r1 = connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
                       dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint)));
     Q_ASSERT(r1 == true);
+
+    bool w1 = connect(web,SIGNAL(jsonList(QByteArray&)),
+                      dbs,  SLOT(jsonList(QByteArray&)));
+    Q_ASSERT(w1 == true);
+
+    bool w2 = connect(web,SIGNAL(jsonStats(QByteArray&,QString&,uint,uint)),
+                      dbs,  SLOT(jsonStats(QByteArray&,QString&,uint,uint)));
+    Q_ASSERT(w2 == true);
 
     signalTimer = new QTimer(this);
     Q_ASSERT(signalTimer != NULL);
@@ -66,6 +77,9 @@ Tts::~Tts()
     if (rpc)
         delete rpc;
 
+    if (web)
+        delete web;
+
     if (signalTimer)
         delete signalTimer;
 
@@ -84,7 +98,9 @@ void Tts::loadSettings()
     params.insert(TTS_SETTINGS_RPC_PASSWORD, QString(""));
     params.insert(TTS_SETTINGS_RPC_SSL, bool(false));
     params.insert(TTS_SETTINGS_DB_NAME, (TTS_APP_NAME ".sqlite") );
-    params.insert(TTS_SETTINGS_DB_PATH, QDir::homePath ());
+    params.insert(TTS_SETTINGS_DB_PATH, TTS_SETTINGS_DB_PATH_DEFAULT);
+    params.insert(TTS_SETTINGS_WEB_PORT, int(4646));
+    params.insert(TTS_SETTINGS_WEB_PATH, TTS_SETTINGS_WEB_PATH_DEFAULT);
 
     QMap<QString,QVariant>::const_iterator i;
     for (i=params.begin();i!=params.end();i++)
