@@ -33,6 +33,9 @@ HEADERS += \
     web.h
 
 OTHER_FILES += \
-    TODO
+    TODO \
+    www/tts.js \
+    www/index.html \
+    www/tts.css
 
 LIBS += -lqjson

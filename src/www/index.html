@@ -1,0 +1,73 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Transmission Torrent Statistics</title>
+
+    <!--
+    http://jqueryui.com/resources/download/jquery-ui-1.10.3.zip
+    MIT licence
+    -->
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.10.3/themes/base/jquery-ui.css" />
+    <script src="jquery-ui-1.10.3/jquery-1.9.1.js"></script>
+    <script src="jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+
+    <!--
+    http://tablesorter.com/docs/#Download
+    MIT or GPL licence
+    -->
+    <script src="__jquery.tablesorter/jquery.tablesorter.js"></script>
+    <link rel="stylesheet" type="text/css" href="__jquery.tablesorter/themes/blue/style.css" />
+
+    <!--
+    our own code
+    see LICENSE
+    -->
+    <link rel="stylesheet" type="text/css" href="tts.css" />
+    <script src="tts.js"></script>
+    <script> $( document ).ready( function() { tts_init(); } ); </script>
+
+</head>
+<body>
+
+<div id="tabs">
+
+  <ul>
+  <li><a href="#tab_overview">Overview</a></li>
+    <li><a href="#tab_details">Details</a></li>
+    <li><a href="#tab_about">About</a></li>
+  </ul>
+
+  <div id="tab_overview">
+
+    <div>
+        <a id="torrent_list_items_reload" href="#">Reload</a>
+    </div>
+
+    <div>
+        <table id="torrent_list" class="tablesorter">
+            <thead>
+                <tr>
+                    <th>Last seen</th>
+                    <th>Torrent name</th>
+                </tr>
+            </thead>
+            <tbody id="torrent_list_items"/>
+        </table>
+    </div>
+
+  </div>
+
+  <div id="tab_details">
+
+  </div>
+
+  <div id="tab_about">
+     <p>
+        <a href="https://github.com/nipil/transmission-torrent-statistics">Transmission-Torrent-Statistics</a>
+      </p>
+  </div>
+
+</div>
+
+</body>
+</html>
