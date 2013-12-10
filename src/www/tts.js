@@ -76,6 +76,18 @@ function tts_draw_graph() {
     var timespan_end = tts_curtime()
     var timespan_start = timespan_end - chart_timespan
 
+    // requesting data
+    $.getJSON("/json/" + chart_hash + "/" + timespan_start + "/" + timespan_end,
+              function (data) {
+                  var points = []
+                  $.each(data, function (key, val) {
+                      var x = parseInt(val.t)
+                      var y = parseInt(val.u)
+                      points.push([val.t,val.u])
+                  })
+                  var plot = $.plot($("#chart"), [ points ]);
+                  console.log(plot)
+              })
 }
 
 function tts_set_graph(hash) {
@@ -87,7 +99,6 @@ function tts_torrent_list_reload() {
     $.getJSON("/json/list", function (data) {
         var tdata = $("#torrent_list_items")
         var ct = tts_curtime()
-        console.log()
         $.each(data, function (key, val) {
             var row = $("<tr/>")
             var age = $("<td/>", {
@@ -101,8 +112,8 @@ function tts_torrent_list_reload() {
                          })
             link.click(function () {
                 $("#tabs").tabs("option", "active", 1)
+                $("#detailname").html(val.name)
                 tts_set_graph(val.hash)
-                tts_draw_graph()
             })
             var name = $("<td/>", {
                              title: val.hash
