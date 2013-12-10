@@ -19,6 +19,13 @@
     <link rel="stylesheet" type="text/css" href="__jquery.tablesorter/themes/blue/style.css" />
 
     <!--
+    http://www.flotcharts.org/downloads/flot-0.8.2.zip
+    MIT License
+    -->
+    <script src="flot/jquery.flot.js"></script>
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
+
+    <!--
     our own code
     see LICENSE
     -->
@@ -58,6 +65,17 @@
   </div>
 
   <div id="tab_details">
+
+    <div id="timespan">
+        <input type="radio" id="timespan1" name="radio" amount="3600"><label for="timespan1" checked="checked">1 hour</label>
+        <input type="radio" id="timespan2" name="radio" amount="86400"><label for="timespan2">24 hour</label>
+        <input type="radio" id="timespan3" name="radio" amount="604800"><label for="timespan3">7 days</label>
+        <input type="radio" id="timespan4" name="radio" amount="2592000"><label for="timespan4">30 days</label>
+        <input type="radio" id="timespan5" name="radio" amount="31536000"><label for="timespan5">365 days</label>
+    </div>
+
+    <!-- need to set div size so the library can autoscale the graph -->
+    <div id="chart" style="height: 300px; width: 100%;" />
 
   </div>
 

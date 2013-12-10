@@ -1,9 +1,26 @@
+// span time in seconds used for visualization
+var chart_timespan
+var chart_hash
+
+// called when page is loaded
 function tts_init() {
+    // init tabs
     $("#tabs").tabs()
+
+    // init radiobuttons in detailed tab
+    $("#timespan").buttonset()
+    $("#timespan > input").click(function () {
+        chart_timespan = $(this).attr("amount")
+        tts_draw_graph()
+    })
+    // initial selection
+    $("#timespan1").click()
+
+    // init torrent list reload (maybe replaced by timed reload ?
     $("#torrent_list_items_reload").click(function () {
         tts_torrent_list_reload()
-        console.log("tts_torrent_list_reload requested")
     })
+    // initial loading
     tts_torrent_list_reload()
 }
 
@@ -48,10 +65,22 @@ $.tablesorter.addParser({
                             type: 'numeric'
                         })
 
-function tts_show_graph(hash) {
-    $("#tabs").tabs("option","active",1)
-    console.log(hash)
+function tts_draw_graph() {
+    // verifying hash
+    if (!chart_hash)
+        return
 
+    // calculating display window
+    if (!chart_timespan)
+        chart_timespan = 60 * 60
+    var timespan_end = tts_curtime()
+    var timespan_start = timespan_end - chart_timespan
+
+}
+
+function tts_set_graph(hash) {
+    chart_hash = hash
+    tts_draw_graph()
 }
 
 function tts_torrent_list_reload() {
@@ -71,7 +100,9 @@ function tts_torrent_list_reload() {
                              html: val.name
                          })
             link.click(function () {
-                tts_show_graph(val.hash)
+                $("#tabs").tabs("option", "active", 1)
+                tts_set_graph(val.hash)
+                tts_draw_graph()
             })
             var name = $("<td/>", {
                              title: val.hash
