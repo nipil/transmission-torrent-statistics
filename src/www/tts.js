@@ -15,19 +15,19 @@ function tts_curtime() {
 function tts_agetime(cur, target) {
     var diff = Math.abs(cur - target)
     var unit = "sec"
-    if (diff > 60) {
+    if (diff > 60 && unit == "sec") {
         diff /= 60
         unit = "min"
     }
-    if (diff > 60) {
+    if (diff > 60 && unit == "min") {
         diff /= 60
         unit = "hour"
     }
-    if (diff > 24) {
+    if (diff > 24 && unit == "hour") {
         diff /= 24
         unit = "day"
     }
-    if (diff > 365) {
+    if (diff > 365 && unit == "day") {
         diff /= 365
         unit = "year"
     }
