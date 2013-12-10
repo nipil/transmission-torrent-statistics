@@ -48,24 +48,36 @@ $.tablesorter.addParser({
                             type: 'numeric'
                         })
 
+function tts_show_graph(hash) {
+    $("#tabs").tabs("option","active",1)
+    console.log(hash)
+
+}
+
 function tts_torrent_list_reload() {
     $.getJSON("/json/list", function (data) {
-        var tdata = $("#torrent_list_items").append($("toto"))
+        var tdata = $("#torrent_list_items")
         var ct = tts_curtime()
         console.log()
         $.each(data, function (key, val) {
             var row = $("<tr/>")
-            var t_a = $("<td/>", {
+            var age = $("<td/>", {
                             time: val.last,
                             html: tts_agetime(ct, val.last)
                         })
-            t_a.tooltip()
-            row.append(t_a)
-            var t_n = $("<td/>", {
-                            title: val.hash,
-                            html: val.name
-                        })
-            row.append(t_n)
+            row.append(age)
+            var link = $("<a/>", {
+                             href: "#",
+                             html: val.name
+                         })
+            link.click(function () {
+                tts_show_graph(val.hash)
+            })
+            var name = $("<td/>", {
+                             title: val.hash
+                         })
+            name.append(link)
+            row.append(name)
             tdata.append(row)
         })
         $("#torrent_list").tablesorter({
