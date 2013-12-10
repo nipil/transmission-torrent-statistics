@@ -35,6 +35,8 @@ class Dbs : public QObject
     void createHashTable(QString & hashString);
     void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
 
+    QVariant lastActive(QString & hashString);
+
 public:
     explicit Dbs(QObject * p, QSettings * s);
     virtual ~Dbs();
