@@ -20,6 +20,17 @@ class Dbs : public QObject
     QStringList known_tables;
     QStringList known_hashes;
 
+    class Sample
+    {
+    public:
+        uint unixtime;
+        qlonglong downloadedEver;
+        qlonglong uploadedEver;
+        Sample(uint t, qlonglong d, qlonglong u);
+    };
+
+    QHash<QString,Sample> last_samples;
+
     void open();
     void close();
 

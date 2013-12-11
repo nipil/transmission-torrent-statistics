@@ -271,7 +271,14 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
         createHashTable(tableName);
     }
 
-    insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
+    // data deduplication, don't store samples which didn't change
+    QHash<QString,Sample>::iterator i = last_samples.find(hashString);
+    if (i == last_samples.end() || i->downloadedEver != downloadedEver || i->uploadedEver != uploadedEver)
+    {
+        insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
+        // replaces the old if already existant
+        last_samples.insert( hashString, Sample(unixtime,downloadedEver,uploadedEver) );
+    }
 }
 
 void Dbs::jsonList(QByteArray & out)
@@ -347,4 +354,11 @@ QVariant Dbs::lastActive(QString & hashString)
     cleanupQuery(q,false);
 
     return when;
+}
+
+Dbs::Sample::Sample(uint t, qlonglong d, qlonglong u) :
+    unixtime(t),
+    downloadedEver(d),
+    uploadedEver(u)
+{
 }
