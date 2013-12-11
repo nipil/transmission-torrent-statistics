@@ -6,7 +6,7 @@ Fetches cumulated upload and download amounts for each torrent.
 
 Stores these information in a database for later use.
 
-## Dependencies
+## Program Dependencies
 
 On Debian-like systems where you build it
 - qt-sdk
@@ -16,6 +16,15 @@ On Debian-like systems where you run it
 - libqt4-network
 - libqt4-sql-sqlite
 - libqjson
+
+## Web portal dependencies
+
+As of today, the following modules are used
+- http://jqueryui.com/resources/download/jquery-ui-1.10.3.zip (MIT licence)
+- http://tablesorter.com/docs/#Download (MIT or GPL licence)
+- http://www.flotcharts.org/downloads/flot-0.8.2.zip (MIT License)
+
+These modules are served locally (see `index.html` for local path names)
 
 ## Configuration
 
@@ -92,4 +101,7 @@ These kind of issues need to be taken into account for every later use of the co
 
 ## To be done
 
-Dynamic web portal to visualize the data.
+Optimize database storage by removing duplicates
+Optimize web portal graph generation using deltas and bins
+
+
