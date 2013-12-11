@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define TTS_APP_VERSION "1.0"
+#define TTS_APP_VERSION "1.1"
 #define TTS_APP_ORGNAME "nipil"
 #define TTS_APP_ORGDOMAIN "nipil.org"
 #define TTS_APP_NAME "transmission-torrent-statistics"
