@@ -1,9 +1,26 @@
+// span time in seconds used for visualization
+var chart_timespan
+var chart_hash
+
+// called when page is loaded
 function tts_init() {
+    // init tabs
     $("#tabs").tabs()
+
+    // init radiobuttons in detailed tab
+    $("#timespan").buttonset()
+    $("#timespan > input").click(function () {
+        chart_timespan = $(this).attr("amount")
+        tts_draw_graph()
+    })
+    // initial selection
+    $("#timespan1").click()
+
+    // init torrent list reload (maybe replaced by timed reload ?
     $("#torrent_list_items_reload").click(function () {
         tts_torrent_list_reload()
-        console.log("tts_torrent_list_reload requested")
     })
+    // initial loading
     tts_torrent_list_reload()
 }
 
@@ -48,24 +65,61 @@ $.tablesorter.addParser({
                             type: 'numeric'
                         })
 
+function tts_draw_graph() {
+    // verifying hash
+    if (!chart_hash)
+        return
+
+    // calculating display window
+    if (!chart_timespan)
+        chart_timespan = 60 * 60
+    var timespan_end = tts_curtime()
+    var timespan_start = timespan_end - chart_timespan
+
+    // requesting data
+    $.getJSON("/json/" + chart_hash + "/" + timespan_start + "/" + timespan_end,
+              function (data) {
+                  var points = []
+                  $.each(data, function (key, val) {
+                      var x = parseInt(val.t)
+                      var y = parseInt(val.u)
+                      points.push([val.t,val.u])
+                  })
+                  var plot = $.plot($("#chart"), [ points ]);
+                  console.log(plot)
+              })
+}
+
+function tts_set_graph(hash) {
+    chart_hash = hash
+    tts_draw_graph()
+}
+
 function tts_torrent_list_reload() {
     $.getJSON("/json/list", function (data) {
-        var tdata = $("#torrent_list_items").append($("toto"))
+        var tdata = $("#torrent_list_items")
         var ct = tts_curtime()
-        console.log()
         $.each(data, function (key, val) {
             var row = $("<tr/>")
-            var t_a = $("<td/>", {
+            var age = $("<td/>", {
                             time: val.last,
                             html: tts_agetime(ct, val.last)
                         })
-            t_a.tooltip()
-            row.append(t_a)
-            var t_n = $("<td/>", {
-                            title: val.hash,
-                            html: val.name
-                        })
-            row.append(t_n)
+            row.append(age)
+            var link = $("<a/>", {
+                             href: "#",
+                             html: val.name
+                         })
+            link.click(function () {
+                $("#tabs").tabs("option", "active", 1)
+                $("#detailname").html(val.name)
+                tts_set_graph(val.hash)
+            })
+            var name = $("<td/>", {
+                             title: val.hash
+                         })
+            name.append(link)
+            row.append(name)
             tdata.append(row)
         })
         $("#torrent_list").tablesorter({
