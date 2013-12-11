@@ -5,6 +5,7 @@
 #include <QSettings>
 #include <QTimer>
 
+#include "options.h"
 #include "rpc.h"
 #include "dbs.h"
 #include "web.h"
@@ -18,6 +19,8 @@ class Tts : public QCoreApplication
     Rpc * rpc;
     Dbs * dbs;
     Web * web;
+
+    Options options;
 
 public:
     static bool reloadRequested;

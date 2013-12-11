@@ -9,7 +9,8 @@ bool Tts::reloadRequested = false;
 bool Tts::exitRequested = false;
 
 Tts::Tts(int &argc, char **argv) :
-    QCoreApplication(argc,argv)
+    QCoreApplication(argc,argv),
+    options(argc,argv)
 {
     qDebug() << "Tts::Tts";
 
@@ -59,9 +60,13 @@ Tts::Tts(int &argc, char **argv) :
     bool r3 = connect(pollingTimer,SIGNAL(timeout()),rpc,SLOT(poll()));
     Q_ASSERT(r3 == true);
 
-    pollingTimer->start(60000);
-
-    rpc->poll();
+    if (!options.no_rpc_polling)
+    {
+        // time based polling
+        pollingTimer->start(60000);
+        // force an immediate polling
+        rpc->poll();
+    }
 }
 
 Tts::~Tts()

@@ -22,7 +22,8 @@ SOURCES += main.cpp \
     rpc.cpp \
     dbs.cpp \
     ttsig.cpp \
-    web.cpp
+    web.cpp \
+    options.cpp
 
 HEADERS += \
     tts.h \
@@ -30,7 +31,8 @@ HEADERS += \
     common.h \
     dbs.h \
     ttsig.h \
-    web.h
+    web.h \
+    options.h
 
 OTHER_FILES += \
     TODO \
