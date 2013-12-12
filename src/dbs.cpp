@@ -227,7 +227,8 @@ void Dbs::createHashTable(QString & tableName)
     QString sql = QString("CREATE TABLE %1"
                           "(unixtime INTEGER(32),"
                           "downloadedEver INTEGER(32),"
-                          "uploadedEver INTEGER(32));"
+                          "uploadedEver INTEGER(32),"
+                          "primary KEY (unixtime));"
                           ).arg(tableName);
     q->prepare(sql);
     execQuery(q);
