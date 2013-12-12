@@ -366,19 +366,19 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
         if (!ok)
         {
             qCritical() << "Cannot convert unixtime" << q->value(0).toString() << "to uint";
-            throw EXIT_JSON_CONVERT_ERROR;
+            throw EXIT_DB_CONVERT_ERROR;
         }
         qlonglong d = q->value(1).toLongLong(&ok);
         if (!ok)
         {
             qCritical() << "Cannot convert downloadedEver" << q->value(1).toString() << "to qlonglong";
-            throw EXIT_JSON_CONVERT_ERROR;
+            throw EXIT_DB_CONVERT_ERROR;
         }
         qlonglong u = q->value(2).toLongLong(&ok);
         if (!ok)
         {
             qCritical() << "Cannot convert uploadedEver" << q->value(2).toString() << "to qlonglong";
-            throw EXIT_JSON_CONVERT_ERROR;
+            throw EXIT_DB_CONVERT_ERROR;
         }
         sample.unixtime = t;
         sample.downloadedEver = d;
