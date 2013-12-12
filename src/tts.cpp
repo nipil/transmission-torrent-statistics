@@ -63,7 +63,7 @@ Tts::Tts(int &argc, char **argv) :
     if (!options.no_rpc_polling)
     {
         // time based polling
-        pollingTimer->start(60000);
+        pollingTimer->start(options.rpc_polling_interval * 1000);
         // force an immediate polling
         rpc->poll();
     }

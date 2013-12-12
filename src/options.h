@@ -5,6 +5,7 @@ class Options
 {
 public:
     bool no_rpc_polling;
+    uint rpc_polling_interval;
 
     Options(int &argc, char **argv);
 };
