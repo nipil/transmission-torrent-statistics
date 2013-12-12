@@ -30,6 +30,8 @@ function tts_curtime() {
 }
 
 function tts_agetime(cur, target) {
+    if (target == 0)
+        return "never"
     var diff = Math.abs(cur - target)
     var unit = "sec"
     if (diff > 60 && unit == "sec") {
