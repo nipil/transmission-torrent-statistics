@@ -49,7 +49,6 @@ private:
     void createHashTable(QString & hashString);
     void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
 
-    QVariant lastActive(QString & hashString);
     Dbs::Sample getLatest(QString & hashString);
 
 public:

@@ -303,7 +303,9 @@ void Dbs::jsonList(QByteArray & out)
         torrent.insert("name",q->value(1).toString());
         QString hash = q->value(0).toString();
         torrent.insert("hash",hash);
-        QVariant last = lastActive(hash);
+
+        Dbs::Sample sample = getLatest(hash);
+        QVariant last(sample.unixtime);
         torrent.insert("last",last.toString());
         torrents << torrent;
     }
@@ -341,25 +343,6 @@ void Dbs::jsonStats(QByteArray & out, QString & hashString, uint time_min, uint 
 
     QJson::Serializer s;
     out = s.serialize(torrents);
-}
-
-QVariant Dbs::lastActive(QString & hashString)
-{
-    qDebug() << "Dbs::lastActive" << hashString;
-
-    QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT MAX(unixtime) FROM %1;").arg(hashToTable(hashString));
-    q->prepare(sql);
-    execQuery(q);
-
-    QVariant when(0);
-    if (q->next())
-        when = q->value(0);
-    qDebug() << "when" << when;
-
-    cleanupQuery(q,false);
-
-    return when;
 }
 
 Dbs::Sample Dbs::getLatest(QString & hashString)
