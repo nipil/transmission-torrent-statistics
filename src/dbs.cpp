@@ -273,6 +273,12 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
 
     // data deduplication, don't store samples which didn't change
     QHash<QString,Sample>::iterator i = last_samples.find(hashString);
+    if (i == last_samples.end())
+    {
+        Dbs::Sample sample = getLatest(hashString);
+        i = last_samples.insert(hashString, sample);
+    }
+
     if (i == last_samples.end() || i->downloadedEver != downloadedEver || i->uploadedEver != uploadedEver)
     {
         insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
@@ -354,6 +360,62 @@ QVariant Dbs::lastActive(QString & hashString)
     cleanupQuery(q,false);
 
     return when;
+}
+
+Dbs::Sample Dbs::getLatest(QString & hashString)
+{
+    qDebug() << "Dbs::getLatest" << hashString;
+
+    QString tableName = hashToTable(hashString);
+    QSqlQuery * q = initQuery(false);
+    QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+                          "WHERE unixtime = (SELECT MAX(unixtime) FROM %2);"
+                          ).arg(tableName).arg(tableName);
+    q->prepare(sql);
+    execQuery(q);
+
+    Dbs::Sample sample;
+    if (q->next())
+    {
+        bool ok;
+        uint t = q->value(0).toUInt(&ok);
+        if (!ok)
+        {
+            qCritical() << "Cannot convert unixtime" << q->value(0).toString() << "to uint";
+            throw EXIT_JSON_CONVERT_ERROR;
+        }
+        qlonglong d = q->value(1).toLongLong(&ok);
+        if (!ok)
+        {
+            qCritical() << "Cannot convert downloadedEver" << q->value(1).toString() << "to qlonglong";
+            throw EXIT_JSON_CONVERT_ERROR;
+        }
+        qlonglong u = q->value(2).toLongLong(&ok);
+        if (!ok)
+        {
+            qCritical() << "Cannot convert uploadedEver" << q->value(2).toString() << "to qlonglong";
+            throw EXIT_JSON_CONVERT_ERROR;
+        }
+        sample.unixtime = t;
+        sample.downloadedEver = d;
+        sample.uploadedEver = u;
+        qDebug() << "Found" << t << d << u;
+    }
+    else
+    {
+        qDebug() << "No entry found";
+    }
+
+    cleanupQuery(q,false);
+
+    return sample;
+}
+
+Dbs::Sample::Sample() :
+  unixtime(0),
+  downloadedEver(0),
+  uploadedEver(0)
+{
 }
 
 Dbs::Sample::Sample(uint t, qlonglong d, qlonglong u) :

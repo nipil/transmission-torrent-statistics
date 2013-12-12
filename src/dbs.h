@@ -20,15 +20,18 @@ class Dbs : public QObject
     QStringList known_tables;
     QStringList known_hashes;
 
+public:
     class Sample
     {
     public:
         uint unixtime;
         qlonglong downloadedEver;
         qlonglong uploadedEver;
+        Sample();
         Sample(uint t, qlonglong d, qlonglong u);
     };
 
+private:
     QHash<QString,Sample> last_samples;
 
     void open();
@@ -47,6 +50,7 @@ class Dbs : public QObject
     void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
 
     QVariant lastActive(QString & hashString);
+    Dbs::Sample getLatest(QString & hashString);
 
 public:
     explicit Dbs(QObject * p, QSettings * s);
