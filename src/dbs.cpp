@@ -10,11 +10,14 @@
 
 #include <QSqlDriver>
 
-Dbs::Dbs(QObject *p, QSettings * s) :
+Dbs::Dbs(QObject *p, QSettings * s, QString overrideFileName) :
     QObject(p),
+    overridden_filename(overrideFileName),
     settings(s)
 {
     qDebug() << "Dbs::Dbs";
+
+    connection_name = TTS_DB_CONNECTION_NAME + overridden_filename;
 
     open();
 }
@@ -23,7 +26,7 @@ void Dbs::open()
 {
     qDebug() << "Dbs::open";
 
-    QSqlDatabase db = QSqlDatabase::addDatabase(TTS_DB_DRIVER,TTS_DB_CONNECTION_NAME);
+    QSqlDatabase db = QSqlDatabase::addDatabase(TTS_DB_DRIVER,connection_name);
     if (!db.isValid())
     {
         qCritical() << "Could not setup database environment using driver" << TTS_DB_DRIVER << db.lastError().text();
@@ -32,6 +35,11 @@ void Dbs::open()
 
     QDir path(settings->value(TTS_SETTINGS_DB_PATH).toString());
     QString filename = settings->value(TTS_SETTINGS_DB_NAME).toString();
+    if (!overridden_filename.isEmpty())
+    {
+        filename = overridden_filename;
+        qDebug() << "DB filename overridden to" << filename;
+    }
     QString absfilepath = path.absoluteFilePath(filename);
     qDebug() << "Database location" << absfilepath;
 
@@ -66,7 +74,7 @@ void Dbs::close()
 {
     qDebug() << "Dbs::close";
 
-    QSqlDatabase::removeDatabase(TTS_DB_CONNECTION_NAME);
+    QSqlDatabase::removeDatabase(connection_name);
 }
 
 void Dbs::reload()
@@ -88,7 +96,7 @@ QSqlQuery * Dbs::initQuery(bool transaction)
 {
     qDebug() << "Dbs::initQuery" << transaction;
 
-    QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
+    QSqlDatabase db = QSqlDatabase::database(connection_name,true);
 
     if (!db.isValid())
     {
@@ -149,7 +157,7 @@ void Dbs::cleanupQuery(QSqlQuery * query, bool transaction)
 
     if (transaction)
     {
-        QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
+        QSqlDatabase db = QSqlDatabase::database(connection_name,true);
         if (!db.commit())
         {
             qCritical() << "Could not commit transaction" << db.lastError().text();

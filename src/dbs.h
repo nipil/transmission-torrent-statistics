@@ -15,6 +15,8 @@ class Dbs : public QObject
         WriteFull = 2
     };
 
+    QString overridden_filename;
+    QString connection_name;
     QSettings * settings;
 
     QStringList known_tables;
@@ -52,7 +54,7 @@ private:
     Dbs::Sample getLatest(QString & hashString);
 
 public:
-    explicit Dbs(QObject * p, QSettings * s);
+    explicit Dbs(QObject * p, QSettings * s, QString overrideFileName = QString());
     virtual ~Dbs();
 
     void reload();
