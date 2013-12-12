@@ -25,6 +25,8 @@ Tts::Tts(int &argc, char **argv) :
     Q_ASSERT(settings != NULL);
     loadSettings();
 
+    Dbs::maintenance(this,settings,options);
+
     dbs = new Dbs(this,settings);
     Q_ASSERT(dbs != NULL);
 

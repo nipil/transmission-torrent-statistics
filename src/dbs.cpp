@@ -442,3 +442,37 @@ Dbs::Sample::Sample(uint t, qlonglong d, qlonglong u) :
     uploadedEver(u)
 {
 }
+
+void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
+{
+    qDebug() << "Dbs::maintenance";
+
+    // exit if not a single maintenance operation is requested
+    if (!o.db_deduplication)
+        return;
+
+    // move current database out of the way to create a fresh one
+    QDateTime now = QDateTime::currentDateTime();
+    QDir path( s->value(TTS_SETTINGS_DB_PATH).toString() );
+    QString cname = s->value(TTS_SETTINGS_DB_NAME).toString();
+    QString oname = now.toString( "yyyy-MM-dd_hh-mm-ss_zzz_" ) + cname;
+    QString cpath = path.absoluteFilePath( cname );
+    QString opath = path.absoluteFilePath( oname );
+    qDebug() << "Backup name" << opath;
+    if (!QFile::rename(cpath,opath))
+    {
+        qCritical() << "Renaming " << cpath << "to" << opath << "failed";
+        throw EXIT_DB_MAINTENANCE_RENAME_ERROR;
+    }
+
+    // create new clean database and open old one
+    Dbs cdb(p,s);
+    Dbs odb(p,s,oname);
+
+    // import old database data to new database, cleaning on the way
+    foreach(QString hashString, odb.known_hashes)
+    {
+        uint count = odb.getCount(hashString);
+    }
+}
+

@@ -5,6 +5,8 @@
 #include <QSqlDatabase>
 #include <QStringList>
 
+#include "options.h"
+
 class Dbs : public QObject
 {
     Q_OBJECT
@@ -59,6 +61,8 @@ public:
     virtual ~Dbs();
 
     void reload();
+
+    static void maintenance(QObject *p, QSettings * s, Options & o);
 
 signals:
 
