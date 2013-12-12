@@ -10,7 +10,7 @@ bool Tts::exitRequested = false;
 
 Tts::Tts(int &argc, char **argv) :
     QCoreApplication(argc,argv),
-    options(argc,argv)
+    options(this->arguments())
 {
     qDebug() << "Tts::Tts";
 
