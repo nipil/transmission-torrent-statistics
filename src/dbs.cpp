@@ -245,6 +245,32 @@ void Dbs::createHashTable(QString & tableName)
     known_tables.append(tableName);
 }
 
+uint Dbs::getCount(QString & hashString)
+{
+    qDebug() << "Dbs::getCount" << hashString;
+
+    QSqlQuery * q = initQuery(false);
+    QString sql = QString("SELECT COUNT(unixtime) FROM %1;").arg(hashToTable(hashString));
+    q->prepare(sql);
+    execQuery(q);
+
+    uint count = 0;
+    if (q->next())
+    {
+        bool ok;
+        count = q->value(0).toUInt(&ok);
+        if (!ok)
+        {
+            qCritical() << "Cannot convert count" << q->value(0).toString() << "to uint";
+            throw EXIT_DB_CONVERT_ERROR;
+        }
+    }
+
+    cleanupQuery(q,false);
+
+    return count;
+}
+
 void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver)
 {
     qDebug() << "Dbs::insertHashTable" << tableName << "T" << unixtime << "D" << downloadedEver << "U" << uploadedEver;

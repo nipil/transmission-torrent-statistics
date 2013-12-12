@@ -52,6 +52,7 @@ private:
     void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
 
     Dbs::Sample getLatest(QString & hashString);
+    uint getCount(QString & hashString);
 
 public:
     explicit Dbs(QObject * p, QSettings * s, QString overrideFileName = QString());
