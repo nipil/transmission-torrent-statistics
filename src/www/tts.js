@@ -98,6 +98,8 @@ function tts_set_graph(hash) {
 function tts_torrent_list_reload() {
     $.getJSON("/json/list", function (data) {
         var tdata = $("#torrent_list_items")
+        if (data.length > 0)
+            tdata.html("");
         var ct = tts_curtime()
         $.each(data, function (key, val) {
             var row = $("<tr/>")
