@@ -33,6 +33,7 @@ public:
         qlonglong uploadedEver;
         Sample();
         Sample(uint t, qlonglong d, qlonglong u);
+        void set(QVariant t, QVariant d, QVariant u);
     };
 
 private:

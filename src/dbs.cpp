@@ -401,29 +401,8 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
     Dbs::Sample sample;
     if (q->next())
     {
-        bool ok;
-        uint t = q->value(0).toUInt(&ok);
-        if (!ok)
-        {
-            qCritical() << "Cannot convert unixtime" << q->value(0).toString() << "to uint";
-            throw EXIT_DB_CONVERT_ERROR;
-        }
-        qlonglong d = q->value(1).toLongLong(&ok);
-        if (!ok)
-        {
-            qCritical() << "Cannot convert downloadedEver" << q->value(1).toString() << "to qlonglong";
-            throw EXIT_DB_CONVERT_ERROR;
-        }
-        qlonglong u = q->value(2).toLongLong(&ok);
-        if (!ok)
-        {
-            qCritical() << "Cannot convert uploadedEver" << q->value(2).toString() << "to qlonglong";
-            throw EXIT_DB_CONVERT_ERROR;
-        }
-        sample.unixtime = t;
-        sample.downloadedEver = d;
-        sample.uploadedEver = u;
-        qDebug() << "Found" << t << d << u;
+        sample.set(q->value(0),q->value(1),q->value(2));
+        qDebug() << "Found" << sample.unixtime << sample.downloadedEver << sample.uploadedEver;
     }
     else
     {
@@ -447,6 +426,37 @@ Dbs::Sample::Sample(uint t, qlonglong d, qlonglong u) :
     downloadedEver(d),
     uploadedEver(u)
 {
+}
+
+void Dbs::Sample::set(QVariant vt, QVariant vd, QVariant vu)
+{
+    unixtime = 0;
+    downloadedEver = 0;
+    uploadedEver = 0;
+
+    bool ok;
+    uint t = vt.toUInt(&ok);
+    if (!ok)
+    {
+        qCritical() << "Cannot convert unixtime" << vt.toString() << "to uint";
+        throw EXIT_DB_CONVERT_ERROR;
+    }
+    qlonglong d = vd.toLongLong(&ok);
+    if (!ok)
+    {
+        qCritical() << "Cannot convert downloadedEver" << vd.toString() << "to qlonglong";
+        throw EXIT_DB_CONVERT_ERROR;
+    }
+    qlonglong u = vu.toLongLong(&ok);
+    if (!ok)
+    {
+        qCritical() << "Cannot convert uploadedEver" << vu.toString() << "to qlonglong";
+        throw EXIT_DB_CONVERT_ERROR;
+    }
+
+    unixtime = t;
+    downloadedEver = d;
+    uploadedEver = u;
 }
 
 void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
