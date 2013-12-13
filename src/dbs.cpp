@@ -332,17 +332,11 @@ void Dbs::jsonList(QByteArray & out)
 {
     qDebug() << "Dbs::jsonList";
 
-    QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT hash,name FROM %1;").arg(TTS_DB_HASHTABLE_NAME);
-    q->prepare(sql);
-    execQuery(q);
-
     QVariantList torrents;
-    while (q->next())
+    foreach(QString hash, known_hashes.keys())
     {
         QVariantMap torrent;
-        torrent.insert("name",q->value(1).toString());
-        QString hash = q->value(0).toString();
+        torrent.insert("name",getTorrentName(hash));
         torrent.insert("hash",hash);
 
         Dbs::Sample sample = getLatest(hash);
@@ -350,8 +344,6 @@ void Dbs::jsonList(QByteArray & out)
         torrent.insert("last",last.toString());
         torrents << torrent;
     }
-
-    cleanupQuery(q,false);
 
     QJson::Serializer s;
     out = s.serialize(torrents);
