@@ -2,39 +2,19 @@
 <head>
     <meta charset="utf-8" />
     <title>Transmission Torrent Statistics</title>
-
-    <!--
-    http://jqueryui.com/resources/download/jquery-ui-1.10.3.zip
-    MIT licence
-    -->
-    <link rel="stylesheet" type="text/css" href="jquery-ui-1.10.3/themes/base/jquery-ui.css" />
-    <script src="jquery-ui-1.10.3/jquery-1.9.1.js"></script>
-    <script src="jquery-ui-1.10.3/ui/jquery-ui.js"></script>
-
-    <!--
-    http://tablesorter.com/docs/#Download
-    MIT or GPL licence
-    -->
-    <script src="__jquery.tablesorter/jquery.tablesorter.js"></script>
-    <link rel="stylesheet" type="text/css" href="__jquery.tablesorter/themes/blue/style.css" />
-
-    <!--
-    http://www.flotcharts.org/downloads/flot-0.8.2.zip
-    MIT License
-    -->
-    <script src="flot/jquery.flot.js"></script>
-    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
-
-    <!--
-    our own code
-    see LICENSE
-    -->
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.10.3/themes/base/minified/jquery-ui.min.css" />
+    <link rel="stylesheet" type="text/css" href="tablesorter-2.0.5/blue/style.css" />
     <link rel="stylesheet" type="text/css" href="tts.css" />
+    <script src="jquery-1.10.2/jquery-1.10.2.min.js"></script>
+    <script src="jquery-ui-1.10.3/jquery-ui.min.js"></script>
+    <script src="tablesorter-2.0.5/jquery.tablesorter.min.js"></script>
+    <script src="flot-0.8.2/jquery.flot.min.js"></script>
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot-0.8.2/excanvas.min.js"></script><![endif]-->
     <script src="tts.js"></script>
-    <script> $( document ).ready( function() { tts_init(); } ); </script>
-
 </head>
 <body>
+
+<script> $( document ).ready( function() { tts_init(); } ); </script>
 
 <div id="tabs">
 
