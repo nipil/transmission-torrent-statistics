@@ -223,6 +223,11 @@ void Dbs::loadMasterHashes()
     cleanupQuery(q,false);
 }
 
+QString Dbs::getTorrentName(QString & hashString)
+{
+    return known_hashes.value(hashString);
+}
+
 QString Dbs::hashToTable(QString & hashString)
 {
     return QString("%1_%2").arg(TTS_DB_HASH_PREFIX).arg(hashString);

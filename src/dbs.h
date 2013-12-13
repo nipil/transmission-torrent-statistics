@@ -46,6 +46,7 @@ private:
     void cleanupQuery(QSqlQuery * query, bool transaction);
 
     void loadMasterHashes();
+    QString getTorrentName(QString & hashString);
 
     QString hashToTable(QString & hashString);
     void createMasterTable();
