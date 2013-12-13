@@ -481,6 +481,27 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
     foreach(QString hashString, odb.known_hashes.keys())
     {
         uint count = odb.getCount(hashString);
+        QString name = odb.getTorrentName(hashString);
+        QString tableName = odb.hashToTable(hashString);
+
+        QSqlQuery * q = odb.initQuery(false);
+        QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+                              "ORDER BY unixtime ASC;").arg(tableName);
+        q->prepare(sql);
+        odb.execQuery(q);
+
+        Dbs::Sample sample;
+        while(q->next())
+        {
+            sample.set(q->value(0),q->value(1),q->value(2));
+            cdb.store(hashString,sample.downloadedEver,sample.uploadedEver, name, sample.unixtime);
+        }
+
+        odb.cleanupQuery(q,false);
+
+        uint after = cdb.getCount(hashString);
+
+        qWarning() << tableName << "before" << count << "after" << after;
     }
 }
 
