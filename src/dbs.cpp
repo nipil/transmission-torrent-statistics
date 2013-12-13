@@ -10,11 +10,14 @@
 
 #include <QSqlDriver>
 
-Dbs::Dbs(QObject *p, QSettings * s) :
+Dbs::Dbs(QObject *p, QSettings * s, QString overrideFileName) :
     QObject(p),
+    overridden_filename(overrideFileName),
     settings(s)
 {
     qDebug() << "Dbs::Dbs";
+
+    connection_name = TTS_DB_CONNECTION_NAME + overridden_filename;
 
     open();
 }
@@ -23,7 +26,7 @@ void Dbs::open()
 {
     qDebug() << "Dbs::open";
 
-    QSqlDatabase db = QSqlDatabase::addDatabase(TTS_DB_DRIVER,TTS_DB_CONNECTION_NAME);
+    QSqlDatabase db = QSqlDatabase::addDatabase(TTS_DB_DRIVER,connection_name);
     if (!db.isValid())
     {
         qCritical() << "Could not setup database environment using driver" << TTS_DB_DRIVER << db.lastError().text();
@@ -32,6 +35,11 @@ void Dbs::open()
 
     QDir path(settings->value(TTS_SETTINGS_DB_PATH).toString());
     QString filename = settings->value(TTS_SETTINGS_DB_NAME).toString();
+    if (!overridden_filename.isEmpty())
+    {
+        filename = overridden_filename;
+        qDebug() << "DB filename overridden to" << filename;
+    }
     QString absfilepath = path.absoluteFilePath(filename);
     qDebug() << "Database location" << absfilepath;
 
@@ -66,7 +74,7 @@ void Dbs::close()
 {
     qDebug() << "Dbs::close";
 
-    QSqlDatabase::removeDatabase(TTS_DB_CONNECTION_NAME);
+    QSqlDatabase::removeDatabase(connection_name);
 }
 
 void Dbs::reload()
@@ -88,7 +96,7 @@ QSqlQuery * Dbs::initQuery(bool transaction)
 {
     qDebug() << "Dbs::initQuery" << transaction;
 
-    QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
+    QSqlDatabase db = QSqlDatabase::database(connection_name,true);
 
     if (!db.isValid())
     {
@@ -149,7 +157,7 @@ void Dbs::cleanupQuery(QSqlQuery * query, bool transaction)
 
     if (transaction)
     {
-        QSqlDatabase db = QSqlDatabase::database(TTS_DB_CONNECTION_NAME,true);
+        QSqlDatabase db = QSqlDatabase::database(connection_name,true);
         if (!db.commit())
         {
             qCritical() << "Could not commit transaction" << db.lastError().text();
@@ -190,7 +198,7 @@ void Dbs::insertMasterTable(QString & hashString, QString & name)
     execQuery(q);
     cleanupQuery(q,true);
 
-    known_hashes.append(hashString);
+    known_hashes.insert(hashString,name);
 }
 
 void Dbs::loadMasterHashes()
@@ -198,7 +206,7 @@ void Dbs::loadMasterHashes()
     qDebug() << "Dbs::loadMasterHashes";
 
     QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT hash FROM %1;"
+    QString sql = QString("SELECT hash,name FROM %1;"
                           ).arg(TTS_DB_HASHTABLE_NAME);
     q->prepare(sql);
     execQuery(q);
@@ -207,11 +215,17 @@ void Dbs::loadMasterHashes()
     while (q->next())
     {
         QString hash = q->value(0).toString();
-        qDebug() << "hash" << hash;
-        known_hashes.append(hash);
+        QString name = q->value(1).toString();
+        qDebug() << "hash" << hash << "name" << name;
+        known_hashes.insert(hash,name);
     }
 
     cleanupQuery(q,false);
+}
+
+QString Dbs::getTorrentName(QString & hashString)
+{
+    return known_hashes.value(hashString);
 }
 
 QString Dbs::hashToTable(QString & hashString)
@@ -235,6 +249,32 @@ void Dbs::createHashTable(QString & tableName)
     cleanupQuery(q,true);
 
     known_tables.append(tableName);
+}
+
+uint Dbs::getCount(QString & hashString)
+{
+    qDebug() << "Dbs::getCount" << hashString;
+
+    QSqlQuery * q = initQuery(false);
+    QString sql = QString("SELECT COUNT(unixtime) FROM %1;").arg(hashToTable(hashString));
+    q->prepare(sql);
+    execQuery(q);
+
+    uint count = 0;
+    if (q->next())
+    {
+        bool ok;
+        count = q->value(0).toUInt(&ok);
+        if (!ok)
+        {
+            qCritical() << "Cannot convert count" << q->value(0).toString() << "to uint";
+            throw EXIT_DB_CONVERT_ERROR;
+        }
+    }
+
+    cleanupQuery(q,false);
+
+    return count;
 }
 
 void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver)
@@ -292,17 +332,11 @@ void Dbs::jsonList(QByteArray & out)
 {
     qDebug() << "Dbs::jsonList";
 
-    QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT hash,name FROM %1;").arg(TTS_DB_HASHTABLE_NAME);
-    q->prepare(sql);
-    execQuery(q);
-
     QVariantList torrents;
-    while (q->next())
+    foreach(QString hash, known_hashes.keys())
     {
         QVariantMap torrent;
-        torrent.insert("name",q->value(1).toString());
-        QString hash = q->value(0).toString();
+        torrent.insert("name",getTorrentName(hash));
         torrent.insert("hash",hash);
 
         Dbs::Sample sample = getLatest(hash);
@@ -310,8 +344,6 @@ void Dbs::jsonList(QByteArray & out)
         torrent.insert("last",last.toString());
         torrents << torrent;
     }
-
-    cleanupQuery(q,false);
 
     QJson::Serializer s;
     out = s.serialize(torrents);
@@ -361,29 +393,8 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
     Dbs::Sample sample;
     if (q->next())
     {
-        bool ok;
-        uint t = q->value(0).toUInt(&ok);
-        if (!ok)
-        {
-            qCritical() << "Cannot convert unixtime" << q->value(0).toString() << "to uint";
-            throw EXIT_JSON_CONVERT_ERROR;
-        }
-        qlonglong d = q->value(1).toLongLong(&ok);
-        if (!ok)
-        {
-            qCritical() << "Cannot convert downloadedEver" << q->value(1).toString() << "to qlonglong";
-            throw EXIT_JSON_CONVERT_ERROR;
-        }
-        qlonglong u = q->value(2).toLongLong(&ok);
-        if (!ok)
-        {
-            qCritical() << "Cannot convert uploadedEver" << q->value(2).toString() << "to qlonglong";
-            throw EXIT_JSON_CONVERT_ERROR;
-        }
-        sample.unixtime = t;
-        sample.downloadedEver = d;
-        sample.uploadedEver = u;
-        qDebug() << "Found" << t << d << u;
+        sample.set(q->value(0),q->value(1),q->value(2));
+        qDebug() << "Found" << sample.unixtime << sample.downloadedEver << sample.uploadedEver;
     }
     else
     {
@@ -408,3 +419,89 @@ Dbs::Sample::Sample(uint t, qlonglong d, qlonglong u) :
     uploadedEver(u)
 {
 }
+
+void Dbs::Sample::set(QVariant vt, QVariant vd, QVariant vu)
+{
+    unixtime = 0;
+    downloadedEver = 0;
+    uploadedEver = 0;
+
+    bool ok;
+    uint t = vt.toUInt(&ok);
+    if (!ok)
+    {
+        qCritical() << "Cannot convert unixtime" << vt.toString() << "to uint";
+        throw EXIT_DB_CONVERT_ERROR;
+    }
+    qlonglong d = vd.toLongLong(&ok);
+    if (!ok)
+    {
+        qCritical() << "Cannot convert downloadedEver" << vd.toString() << "to qlonglong";
+        throw EXIT_DB_CONVERT_ERROR;
+    }
+    qlonglong u = vu.toLongLong(&ok);
+    if (!ok)
+    {
+        qCritical() << "Cannot convert uploadedEver" << vu.toString() << "to qlonglong";
+        throw EXIT_DB_CONVERT_ERROR;
+    }
+
+    unixtime = t;
+    downloadedEver = d;
+    uploadedEver = u;
+}
+
+void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
+{
+    qDebug() << "Dbs::maintenance";
+
+    // exit if not a single maintenance operation is requested
+    if (!o.db_deduplication)
+        return;
+
+    // move current database out of the way to create a fresh one
+    QDateTime now = QDateTime::currentDateTime();
+    QDir path( s->value(TTS_SETTINGS_DB_PATH).toString() );
+    QString cname = s->value(TTS_SETTINGS_DB_NAME).toString();
+    QString oname = now.toString( "yyyy-MM-dd_hh-mm-ss_zzz_" ) + cname;
+    QString cpath = path.absoluteFilePath( cname );
+    QString opath = path.absoluteFilePath( oname );
+    qDebug() << "Backup name" << opath;
+    if (!QFile::rename(cpath,opath))
+    {
+        qCritical() << "Renaming " << cpath << "to" << opath << "failed";
+        throw EXIT_DB_MAINTENANCE_RENAME_ERROR;
+    }
+
+    // create new clean database and open old one
+    Dbs cdb(p,s);
+    Dbs odb(p,s,oname);
+
+    // import old database data to new database, cleaning on the way
+    foreach(QString hashString, odb.known_hashes.keys())
+    {
+        uint count = odb.getCount(hashString);
+        QString name = odb.getTorrentName(hashString);
+        QString tableName = odb.hashToTable(hashString);
+
+        QSqlQuery * q = odb.initQuery(false);
+        QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+                              "ORDER BY unixtime ASC;").arg(tableName);
+        q->prepare(sql);
+        odb.execQuery(q);
+
+        Dbs::Sample sample;
+        while(q->next())
+        {
+            sample.set(q->value(0),q->value(1),q->value(2));
+            cdb.store(hashString,sample.downloadedEver,sample.uploadedEver, name, sample.unixtime);
+        }
+
+        odb.cleanupQuery(q,false);
+
+        uint after = cdb.getCount(hashString);
+
+        qWarning() << tableName << "before" << count << "after" << after;
+    }
+}
+

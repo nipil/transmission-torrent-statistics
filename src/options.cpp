@@ -34,6 +34,12 @@ Options::Options(QStringList args) :
             qDebug() << "Custom RPC polling rate" << rpc_polling_interval;
         }
 
+        else if (arg.startsWith("--db-deduplication"))
+        {
+            db_deduplication = true;
+            qDebug() << "Database maintenance requested : deduplication operation";
+        }
+
         else
             errorUnknown(arg);
     }

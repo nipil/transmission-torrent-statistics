@@ -5,6 +5,8 @@
 #include <QSqlDatabase>
 #include <QStringList>
 
+#include "options.h"
+
 class Dbs : public QObject
 {
     Q_OBJECT
@@ -15,10 +17,12 @@ class Dbs : public QObject
         WriteFull = 2
     };
 
+    QString overridden_filename;
+    QString connection_name;
     QSettings * settings;
 
     QStringList known_tables;
-    QStringList known_hashes;
+    QHash<QString,QString> known_hashes;
 
 public:
     class Sample
@@ -29,6 +33,7 @@ public:
         qlonglong uploadedEver;
         Sample();
         Sample(uint t, qlonglong d, qlonglong u);
+        void set(QVariant t, QVariant d, QVariant u);
     };
 
 private:
@@ -42,6 +47,7 @@ private:
     void cleanupQuery(QSqlQuery * query, bool transaction);
 
     void loadMasterHashes();
+    QString getTorrentName(QString & hashString);
 
     QString hashToTable(QString & hashString);
     void createMasterTable();
@@ -50,12 +56,15 @@ private:
     void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
 
     Dbs::Sample getLatest(QString & hashString);
+    uint getCount(QString & hashString);
 
 public:
-    explicit Dbs(QObject * p, QSettings * s);
+    explicit Dbs(QObject * p, QSettings * s, QString overrideFileName = QString());
     virtual ~Dbs();
 
     void reload();
+
+    static void maintenance(QObject *p, QSettings * s, Options & o);
 
 signals:
 
