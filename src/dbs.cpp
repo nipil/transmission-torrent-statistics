@@ -198,7 +198,7 @@ void Dbs::insertMasterTable(QString & hashString, QString & name)
     execQuery(q);
     cleanupQuery(q,true);
 
-    known_hashes.append(hashString);
+    known_hashes.insert(hashString,name);
 }
 
 void Dbs::loadMasterHashes()
@@ -206,7 +206,7 @@ void Dbs::loadMasterHashes()
     qDebug() << "Dbs::loadMasterHashes";
 
     QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT hash FROM %1;"
+    QString sql = QString("SELECT hash,name FROM %1;"
                           ).arg(TTS_DB_HASHTABLE_NAME);
     q->prepare(sql);
     execQuery(q);
@@ -215,8 +215,9 @@ void Dbs::loadMasterHashes()
     while (q->next())
     {
         QString hash = q->value(0).toString();
-        qDebug() << "hash" << hash;
-        known_hashes.append(hash);
+        QString name = q->value(1).toString();
+        qDebug() << "hash" << hash << "name" << name;
+        known_hashes.insert(hash,name);
     }
 
     cleanupQuery(q,false);
@@ -470,7 +471,7 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
     Dbs odb(p,s,oname);
 
     // import old database data to new database, cleaning on the way
-    foreach(QString hashString, odb.known_hashes)
+    foreach(QString hashString, odb.known_hashes.keys())
     {
         uint count = odb.getCount(hashString);
     }

@@ -22,7 +22,7 @@ class Dbs : public QObject
     QSettings * settings;
 
     QStringList known_tables;
-    QStringList known_hashes;
+    QHash<QString,QString> known_hashes;
 
 public:
     class Sample
