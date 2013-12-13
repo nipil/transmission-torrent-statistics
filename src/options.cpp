@@ -6,7 +6,8 @@
 Options::Options(QStringList args) :
     // default values
     no_rpc_polling(false),
-    rpc_polling_interval(60)
+    rpc_polling_interval(60),
+    db_deduplication(false)
 {
     qDebug() << "Options::Options";
 
