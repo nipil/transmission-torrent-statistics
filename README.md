@@ -91,17 +91,41 @@ In a dedicated table for each torrent
 
 The amount value are the data collected by transmission, stored "raw" and unmodified.
 
+### DB Maintenance
+
+As the collected data grows, database optimisation and maintenance operation became a requirement
+
+When any mainteance operation is requested, the following happens :
+- db maintenance is triggered on startup, but before the main loop
+- the current database is moved out of the way (renamed with a timestamp prefix)
+- a fresh, empty database is created
+- for each known torrent in the old database
+- for each sample in the torrent's table
+- apply requested maintenance operations on the sample
+- store the sample (if applicable) into the new database
+
+This has two advantages over working on one single database
+- the old db is backed up, in case anything goes wrong
+- the tables are re-created, which is the only way to alter table structure
+- removing records from an sqlite db doesn't really reduce file size
+
+DB Maintenance is not something that should be run often, and in fact, should "rarely" be run, except for version upgrades requiring it, or to keep storage size under control.
+
+### Data deduplication
+
+For versions 1.0 to 1.2, each and every sample was stored in the database. Since then, a data deduplication algorythm has been implemented which stored the current sample only if there was a change since the last seen one (wether it be download or upload amount). As long as there's no activity on a specific torrent, no data is stored.
+
+As a consequence, a `--db-deduplication` command line option has been introduced, to trim existing databases. The program continues to work with untrimmed databases, but given that a single maintenance run will remove all duplicates forever (and no new duplicates will be added by the current code), all databases created before 1.3 *should* undergo maintenance. Database create later don't need this kind of maintenance at all.
+
 ## Irregularities in the data 
 
-If you delete a torrent, and later add it again, and/or your transmission client cleared it's stats, then the "amount" values will not be continuous.
+If you delete a torrent, and later add it again, and/or your transmission client cleared it's stats, then the "amount" values will not be solely increasing.
 
-If the transmission client is unreachable at the time of the polling, the collected data will not be continuous (ie there will be holes in the data)
+If the transmission client is unreachable at the time of the polling, or the data hasn't change since last known polling, no sample is stored, thus don't expect to get one sample per polling interval when querying the database.
 
 These kind of issues need to be taken into account for every later use of the collected data.
 
 ## To be done
 
-Optimize database storage by removing duplicates
 Optimize web portal graph generation using deltas and bins
-
 
