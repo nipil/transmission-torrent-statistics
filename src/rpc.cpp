@@ -16,7 +16,7 @@ Rpc::Rpc(QObject * p, QSettings * s) :
     qDebug() << "Rpc::Rpc";
 
     nam = new QNetworkAccessManager(this);
-    Q_ASSERT(nam != NULL);
+    Q_CHECK_PTR(nam);
 
     bool r = connect(nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
     Q_ASSERT(r == true);
@@ -79,7 +79,7 @@ void Rpc::http_request(uint json_tag)
     }
 
     QNetworkReply* reply = nam->post(req,json_tracking[json_tag]);
-    Q_ASSERT(reply != NULL);
+    Q_CHECK_PTR(reply);
     qDebug() << "reply" << reply;
 
     http_tracking.insert(reply,json_tag);

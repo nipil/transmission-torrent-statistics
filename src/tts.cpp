@@ -22,19 +22,19 @@ Tts::Tts(int &argc, char **argv) :
     signal_init();
 
     settings = new QSettings(this);
-    Q_ASSERT(settings != NULL);
+    Q_CHECK_PTR(settings);
     loadSettings();
 
     Dbs::maintenance(this,settings,options);
 
     dbs = new Dbs(this,settings);
-    Q_ASSERT(dbs != NULL);
+    Q_CHECK_PTR(dbs);
 
     rpc = new Rpc(this,settings);
-    Q_ASSERT(rpc != NULL);
+    Q_CHECK_PTR(rpc);
 
     web = new Web(this,settings);
-    Q_ASSERT(web != NULL);
+    Q_CHECK_PTR(web);
 
     bool r1 = connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
                       dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint)));
@@ -49,7 +49,7 @@ Tts::Tts(int &argc, char **argv) :
     Q_ASSERT(w2 == true);
 
     signalTimer = new QTimer(this);
-    Q_ASSERT(signalTimer != NULL);
+    Q_CHECK_PTR(signalTimer);
 
     bool r2 = connect(signalTimer,SIGNAL(timeout()),this,SLOT(signalCheck()));
     Q_ASSERT(r2 == true);
@@ -57,7 +57,7 @@ Tts::Tts(int &argc, char **argv) :
     signalTimer->start(200);
 
     pollingTimer = new QTimer(this);
-    Q_ASSERT(pollingTimer != NULL);
+    Q_CHECK_PTR(pollingTimer);
 
     bool r3 = connect(pollingTimer,SIGNAL(timeout()),rpc,SLOT(poll()));
     Q_ASSERT(r3 == true);

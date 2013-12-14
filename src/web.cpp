@@ -60,7 +60,7 @@ void Web::disconnected()
     qDebug() << "Web::disconnected";
 
     QTcpSocket * t = dynamic_cast<QTcpSocket *>(sender());
-    Q_ASSERT(t != NULL);
+    Q_CHECK_PTR(t);
 
     if (t) t->deleteLater();
 }
@@ -70,7 +70,7 @@ void Web::readyRead()
     qDebug() << "Web::readyRead";
 
     QTcpSocket * t = dynamic_cast<QTcpSocket *>(sender());
-    Q_ASSERT(t != NULL);
+    Q_CHECK_PTR(t);
 
     /* based on http://doc.qt.digia.com/solutions/4/qtservice/qtservice-example-server.html */
 
