@@ -4,6 +4,7 @@
 #include "logger.h"
 
 Logger Logger::TTSLOG;
+QTextStream Logger::strout(stdout,QIODevice::WriteOnly);
 
 bool Logger::show_qt_debug = true;
 bool Logger::show_qt_warning = true;
@@ -60,8 +61,7 @@ void Logger::loggerQtMessageOutput(QtMsgType type, const char *msg)
     }
 }
 
-Logger::Logger() :
-    QTextStream(stdout,QIODevice::WriteOnly)
+Logger::Logger()
 {
     qDebug() << "Logger::Logger";
 

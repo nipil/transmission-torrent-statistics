@@ -4,7 +4,7 @@
 #include <QTextStream>
 #include <QDateTime>
 
-class Logger : public QTextStream
+class Logger
 {
     // qDebug and friends
     static bool show_qt_debug;
@@ -24,12 +24,13 @@ private:
     Logger();
     virtual ~Logger();
     static Logger TTSLOG;
+    static QTextStream strout;
 
     static inline Logger & Prepend(QString header)
     {
-        TTSLOG << QDateTime::currentDateTime()
+        strout << QDateTime::currentDateTime()
                   .toString("yyyy-MM-dd hh:mm:ss")
-               << header;
+               << " " << header;
         return TTSLOG;
     }
 
@@ -38,6 +39,13 @@ public:
     static inline Logger & Info() { return Prepend("Info"); }
     static inline Logger & Warn() { return Prepend("Warn"); }
     static inline Logger & Error() { return Prepend("Error"); }
+
+    template <class T>
+    inline Logger & operator << (T t)
+    {
+        strout << " " << t;
+        return TTSLOG;
+    }
 };
 
 #endif // LOGGER_H
