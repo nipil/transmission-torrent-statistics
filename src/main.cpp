@@ -11,29 +11,27 @@
 
 int main(int argc, char *argv[])
 {
-    Logger::initQtLog();
-
     try
     {
         int result;
 
-        qDebug() << "Initializing application";
+        Logger::Debug() << "Initializing application" << endl;
         Tts tts(argc, argv);
 
-        qDebug() << "Starting event loop";
+        Logger::Debug() << "Starting event loop" << endl;
         result = tts.exec();
 
-        qDebug() << "Event loop ended with value" << result;
+        Logger::Debug() << "Event loop ended with value" << result << endl;
         return result;
     }
     catch( int err )
     {
-        qCritical() << "Main" << "Exception" << err;
+        Logger::Error() << "Main" << "Exception" << err << endl;
         return err;
     }
     catch( ... )
     {
-        qCritical() << "Main" << "Untracked  exception occured";
+        Logger::Error() << "Main" << "Untracked  exception occured" << endl;
         return EXIT_UNKNOWN;
     }
 }
