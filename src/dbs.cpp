@@ -7,6 +7,7 @@
 #include <qjson/serializer.h>
 #include "common.h"
 #include "dbs.h"
+#include "logger.h"
 
 #include <QSqlDriver>
 
@@ -491,11 +492,21 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
         odb.execQuery(q);
 
         Dbs::Sample sample;
+        bool first = true;
         while(q->next())
         {
             sample.set(q->value(0),q->value(1),q->value(2));
             cdb.store(hashString,sample.downloadedEver,sample.uploadedEver, name, sample.unixtime);
+            // deactivate qDebug() output after first sample to prevent flooding
+            // this way we can still check table creation and so on
+            if (first)
+            {
+                first = false;
+                Logger::showQtDebug(false);
+            }
         }
+        // restore qDebug() output
+        Logger::showQtDebug(true);
 
         odb.cleanupQuery(q,false);
 

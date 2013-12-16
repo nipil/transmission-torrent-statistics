@@ -1,20 +1,18 @@
 #include <QtGlobal>
 #include <QDebug>
 #include "common.h"
+#include "logger.h"
 #include "tts.h"
 
 /*
- * Logging information :
- * debugging is done to stderr via qDebug()
- * normal logging is done via qWarning() which can be recovered
- * error is done via qCritical() and should stop the process
- *
- * Debuging can be disabled at compile time via
+ * QtDebuging can be really turned of at compile time via
  * DEFINES += QT_NO_DEBUG_OUTPUT in .pro
  */
 
 int main(int argc, char *argv[])
 {
+    Logger::initQtLog();
+
     try
     {
         int result;

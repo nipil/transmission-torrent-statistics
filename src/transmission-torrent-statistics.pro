@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     dbs.cpp \
     ttsig.cpp \
     web.cpp \
-    options.cpp
+    options.cpp \
+    logger.cpp
 
 HEADERS += \
     tts.h \
@@ -32,7 +33,8 @@ HEADERS += \
     dbs.h \
     ttsig.h \
     web.h \
-    options.h
+    options.h \
+    logger.h
 
 OTHER_FILES += \
     TODO \
