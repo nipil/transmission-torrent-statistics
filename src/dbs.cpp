@@ -485,6 +485,9 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
 
     QDateTime t_start = QDateTime::currentDateTime();
 
+    // db_age parameters
+    uint oldest_time = t_start.toTime_t() - o.db_age * 24 * 60 * 60;
+
     // import old database data to new database, cleaning on the way
     foreach(QString hashString, odb.known_hashes.keys())
     {
@@ -503,7 +506,15 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
         while(q->next())
         {
             sample.set(q->value(0),q->value(1),q->value(2));
+
+            // db age cleanup task, skip sample if old
+            if (o.db_age > 0)
+                if (sample.unixtime < oldest_time)
+                    continue;
+
+            // data deduplication is done automatically on lower level
             cdb.store(hashString,sample.downloadedEver,sample.uploadedEver, name, sample.unixtime);
+
             // deactivate qDebug() output after first sample to prevent flooding
             // this way we can still check table creation and so on
             if (first)

@@ -55,7 +55,7 @@ Options::Options(QStringList args) :
             if (t == 0)
                 errorInvalid(arg);
             db_age = t;
-            Logger::Verbose() << "Databade age cleanup requested" << db_age;
+            Logger::Verbose() << "Databade age cleanup requested, all samples older than" << db_age << "days will be removed";
         }
 
         else if (arg.startsWith("--db-deduplication"))
