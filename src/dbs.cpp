@@ -528,7 +528,9 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
 
         odb.cleanupQuery(q,false);
 
-        uint after = cdb.getCount(hashString);
+        uint after = 0;
+        if (cdb.known_tables.contains(tableName))
+            after = cdb.getCount(hashString);
 
         Logger::Info() << "Torrent" << hashString << "from" << count << "to" << after << "samples";
     }
