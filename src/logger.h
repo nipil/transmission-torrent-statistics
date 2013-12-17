@@ -6,11 +6,36 @@
 
 class Logger
 {
-    // qDebug and friends
+private:
+    QTextStream out;
+    uint lvl;
+    static uint global_debug_max_level;
+
+public:
+    Logger(QString line_header, uint level = 0);
+    Logger(const Logger & other); /* needed because QTextStream cannot be copied */
+    virtual ~Logger();
+
+    template <class T>
+    Logger & operator << (T t)
+    {
+        if (lvl < global_debug_max_level)
+            out << " " << t;
+        return *this;
+    }
+
+    static void setDebugMaxLevel(uint level = 255);
+    static Logger Debug(uint level = 0);
+    static Logger Info();
+    static Logger Warn();
+    static Logger Error();
+
+private:
     static bool show_qt_debug;
     static bool show_qt_warning;
     static bool show_qt_critical;
     static bool show_qt_fatal;
+    static QtMsgHandler original_handler;
     static void loggerQtMessageOutput(QtMsgType type, const char *msg);
 
 public:
@@ -18,34 +43,7 @@ public:
     static void showQtWarning(bool show);
     static void showQtCritical(bool show);
     static void showQtFatal(bool show);
-    static void initQtLog();
 
-private:
-    Logger();
-    virtual ~Logger();
-    static Logger TTSLOG;
-    static QTextStream strout;
-
-    static inline Logger & Prepend(QString header)
-    {
-        strout << QDateTime::currentDateTime()
-                  .toString("yyyy-MM-dd hh:mm:ss")
-               << " " << header;
-        return TTSLOG;
-    }
-
-public:
-    static inline Logger & Debug() { return Prepend("Debug"); }
-    static inline Logger & Info() { return Prepend("Info"); }
-    static inline Logger & Warn() { return Prepend("Warn"); }
-    static inline Logger & Error() { return Prepend("Error"); }
-
-    template <class T>
-    inline Logger & operator << (T t)
-    {
-        strout << " " << t;
-        return TTSLOG;
-    }
 };
 
 #endif // LOGGER_H

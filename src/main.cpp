@@ -15,23 +15,23 @@ int main(int argc, char *argv[])
     {
         int result;
 
-        Logger::Debug() << "Initializing application" << endl;
+        Logger::Debug() << "Initializing application";
         Tts tts(argc, argv);
 
-        Logger::Debug() << "Starting event loop" << endl;
+        Logger::Debug() << "Starting event loop";
         result = tts.exec();
 
-        Logger::Debug() << "Event loop ended with value" << result << endl;
+        Logger::Debug() << "Event loop ended with value" << result;
         return result;
     }
     catch( int err )
     {
-        Logger::Error() << "Main" << "Exception" << err << endl;
+        Logger::Error() << "Main" << "Exception" << err;
         return err;
     }
     catch( ... )
     {
-        Logger::Error() << "Main" << "Untracked  exception occured" << endl;
+        Logger::Error() << "Main" << "Untracked  exception occured";
         return EXIT_UNKNOWN;
     }
 }
