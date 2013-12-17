@@ -8,7 +8,8 @@ Options::Options(QStringList args) :
     // default values
     no_rpc_polling(false),
     rpc_polling_interval(60),
-    db_deduplication(false)
+    db_deduplication(false),
+    db_age(0)
 {
     qDebug() << "Options::Options";
 
@@ -45,6 +46,16 @@ Options::Options(QStringList args) :
             else
                 errorRange(arg, QString::number(Logger::LOG_MIN), QString::number(Logger::LOG_MAX - 1));
             Logger::Verbose() << "Setting log level to" << t;
+        }
+
+        else if (arg.startsWith("--db-age-cleanup"))
+        {
+            uint t = requiredValue(arg,args).toUInt(&ok);
+            if (!ok) errorConvert(arg,"uint");
+            if (t == 0)
+                errorInvalid(arg);
+            db_age = t;
+            Logger::Verbose() << "Databade age cleanup requested, all samples older than" << db_age << "days will be removed";
         }
 
         else if (arg.startsWith("--db-deduplication"))
@@ -100,4 +111,10 @@ void Options::errorRange(QString arg, QString v_min, QString v_max)
 {
     Logger::Error() << "Argument" << arg << "out of range" << v_min << "-" << v_max;
     throw EXIT_ARGUMENT_RANGE_ERROR;
+}
+
+void Options::errorInvalid(QString arg)
+{
+    Logger::Error() << "Argument" << arg << "has an invalid value";
+    throw EXIT_ARGUMENT_INVALID_ERROR;
 }
