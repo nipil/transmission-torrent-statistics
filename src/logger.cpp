@@ -11,7 +11,7 @@ bool Logger::show_qt_warning = true;
 bool Logger::show_qt_critical = true;
 bool Logger::show_qt_fatal = true;
 
-uint Logger::global_max_level = 255;
+uint Logger::global_max_level = Logger::LOG_INFO;
 
 void Logger::showQtDebug(bool show)
 {
@@ -67,7 +67,7 @@ Logger::Logger(QString header, LOG_LEVEL level, void * p) :
     out(stdout,QIODevice::WriteOnly),
     lvl(level)
 {
-    if (lvl < global_max_level)
+    if (lvl <= global_max_level)
     {
         out << QDateTime::currentDateTime().toString(Qt::ISODate) << " " << header;
         if (p)
@@ -83,7 +83,8 @@ Logger::Logger(const Logger & other) :
 
 Logger::~Logger()
 {
-    out << endl;
+    if (lvl <= global_max_level)
+        out << endl;
 }
 
 Logger Logger::Debug(void * p)

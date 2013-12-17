@@ -36,6 +36,16 @@ Options::Options(QStringList args) :
             Logger::Info() << "Custom RPC polling interval set to" << rpc_polling_interval;
         }
 
+        else if (arg.startsWith("--log-level"))
+        {
+            uint t = requiredValue(arg,args).toUInt(&ok);
+            if (!ok) errorConvert(arg,"uint");
+            if (t >= Logger::LOG_MAX)
+                errorRange(arg, QString::number(Logger::LOG_MIN), QString::number(Logger::LOG_MAX - 1));
+            Logger::setMaxLevel(t);
+            Logger::Info() << "Setting log level to " << t;
+        }
+
         else if (arg.startsWith("--db-deduplication"))
         {
             db_deduplication = true;
@@ -83,4 +93,10 @@ void Options::errorUnknown(QString arg)
 {
     Logger::Error() << "Unknown argument" << arg;
     throw EXIT_ARGUMENT_UNKNOWN_ERROR;
+}
+
+void Options::errorRange(QString arg, QString v_min, QString v_max)
+{
+    Logger::Error() << "Argument" << arg << "out of range" << v_min << "-" << v_max;
+    throw EXIT_ARGUMENT_RANGE_ERROR;
 }

@@ -6,15 +6,19 @@
 
 class Logger
 {
-private:
-    QTextStream out;
+public:
     typedef enum
     {
-        LOG_ERROR = 0,
+        LOG_MIN = 0,
+        LOG_ERROR = LOG_MIN,
         LOG_WARN,
         LOG_INFO,
-        LOG_DEBUG
+        LOG_DEBUG,
+        LOG_MAX
     } LOG_LEVEL;
+
+private:
+    QTextStream out;
     LOG_LEVEL lvl;
     static uint global_max_level;
 
@@ -26,7 +30,7 @@ public:
     template <class T>
     Logger & operator << (T t)
     {
-        if (lvl < global_max_level)
+        if (lvl <= global_max_level)
             out << " " << t;
         return *this;
     }

@@ -11,6 +11,8 @@ class Options
     void errorUnknown(QString arg);
     void errorMissing(QString arg);
     void errorConvert(QString arg, QString type);
+    void errorRange(QString arg, QString v_min, QString v_max);
+
     QVariant requiredValue(QString & current, QStringList & remaining);
 
 public:
