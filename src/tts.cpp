@@ -26,7 +26,9 @@ Tts::Tts(int &argc, char **argv) :
     Q_CHECK_PTR(settings);
     loadSettings();
 
-    Dbs::maintenance(this,settings,options);
+    if (options.db_age > 0 ||
+            options.db_deduplication)
+        Dbs::maintenance(this,settings,options);
 
     dbs = new Dbs(this,settings);
     Q_CHECK_PTR(dbs);

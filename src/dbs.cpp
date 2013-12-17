@@ -463,10 +463,6 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
 {
     qDebug() << "Dbs::maintenance";
 
-    // exit if not a single maintenance operation is requested
-    if (!o.db_deduplication)
-        return;
-
     Logger::Info() << "Entering maintenance mode";
 
     // move current database out of the way to create a fresh one
