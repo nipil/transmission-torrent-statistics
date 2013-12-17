@@ -104,6 +104,7 @@ void Rpc::http_finished( QNetworkReply * reply )
         {
             QByteArray cur_resp = reply->readAll();
             http_response(cur_resp);
+            break;
         }
         Logger::Warn() << "RPC didn't fail but returned unhandled HTTP code" << httpcode;
         break;
