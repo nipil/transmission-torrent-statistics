@@ -1,6 +1,7 @@
 #include <QtGlobal>
 #include <QDebug>
 #include "common.h"
+#include "logger.h"
 #include "options.h"
 
 Options::Options(QStringList args) :
@@ -24,7 +25,7 @@ Options::Options(QStringList args) :
         if (arg.startsWith("--no-rpc-polling"))
         {
             no_rpc_polling = true;
-            qDebug() << "Disabling RPC polling";
+            Logger::Info() << "Disabling RPC polling";
         }
 
         else if (arg.startsWith("--rpc-polling-interval"))
@@ -32,13 +33,13 @@ Options::Options(QStringList args) :
             uint t = requiredValue(arg,args).toUInt(&ok);
             if (!ok) errorConvert(arg,"uint");
             rpc_polling_interval = t;
-            qDebug() << "Custom RPC polling rate" << rpc_polling_interval;
+            Logger::Info() << "Custom RPC polling interval set to" << rpc_polling_interval;
         }
 
         else if (arg.startsWith("--db-deduplication"))
         {
             db_deduplication = true;
-            qDebug() << "Database maintenance requested : deduplication operation";
+            Logger::Info() << "Database deduplication requested";
         }
 
         else
@@ -68,18 +69,18 @@ QVariant Options::requiredValue(QString & current, QStringList & remaining)
 
 void Options::errorMissing(QString arg)
 {
-    qCritical() << "Missing value for argument" << arg;
+    Logger::Error() << "Missing value for argument" << arg;
     throw EXIT_ARGUMENT_MISSING_VALUE_ERROR;
 }
 
 void Options::errorConvert(QString arg, QString type)
 {
-    qCritical() << "Cannot convert value" << lastValue << "of argument" << arg << "to type" << type;
+    Logger::Error() << "Cannot convert value" << lastValue << "of argument" << arg << "to type" << type;
     throw EXIT_ARGUMENT_CONVERT_VALUE_ERROR;
 }
 
 void Options::errorUnknown(QString arg)
 {
-    qCritical() << "Unknown argument" << arg;
+    Logger::Error() << "Unknown argument" << arg;
     throw EXIT_ARGUMENT_UNKNOWN_ERROR;
 }

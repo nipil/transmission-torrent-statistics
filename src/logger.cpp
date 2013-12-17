@@ -11,7 +11,7 @@ bool Logger::show_qt_warning = true;
 bool Logger::show_qt_critical = true;
 bool Logger::show_qt_fatal = true;
 
-uint Logger::global_debug_max_level = 255;
+uint Logger::global_max_level = 255;
 
 void Logger::showQtDebug(bool show)
 {
@@ -63,12 +63,16 @@ void Logger::loggerQtMessageOutput(QtMsgType type, const char *msg)
     }
 }
 
-Logger::Logger(QString header, uint level) :
+Logger::Logger(QString header, LOG_LEVEL level, void * p) :
     out(stdout,QIODevice::WriteOnly),
     lvl(level)
 {
-    if (lvl < global_debug_max_level)
+    if (lvl < global_max_level)
+    {
         out << QDateTime::currentDateTime().toString(Qt::ISODate) << " " << header;
+        if (p)
+            out << " " << p;
+    }
 }
 
 Logger::Logger(const Logger & other) :
@@ -82,29 +86,32 @@ Logger::~Logger()
     out << endl;
 }
 
-Logger Logger::Debug(uint level)
+Logger Logger::Debug(void * p)
 {
-    return Logger("Debug",level);
+    if (p)
+        return Logger("Debug",LOG_DEBUG,p);
+    else
+        return Logger("Debug",LOG_DEBUG);
 }
 
 Logger Logger::Info()
 {
-    return Logger("Info");
+    return Logger("Info",LOG_INFO);
 }
 
 Logger Logger::Warn()
 {
-    return Logger("Warn");
+    return Logger("Warn",LOG_WARN);
 }
 
 Logger Logger::Error()
 {
-    return Logger("Error");
+    return Logger("Error",LOG_ERROR);
 }
 
-void Logger::setDebugMaxLevel(uint level)
+void Logger::setMaxLevel(uint level)
 {
-    qDebug() << "Logger::setDebugMaxLevel" << level;
+    qDebug() << "Logger::setMaxLevel" << level;
 
-    global_debug_max_level = level;
+    global_max_level = level;
 }

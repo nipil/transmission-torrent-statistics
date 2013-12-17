@@ -5,6 +5,7 @@
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
 #include "common.h"
+#include "logger.h"
 #include "rpc.h"
 
 Rpc::Rpc(QObject * p, QSettings * s) :
@@ -104,11 +105,11 @@ void Rpc::http_finished( QNetworkReply * reply )
             QByteArray cur_resp = reply->readAll();
             http_response(cur_resp);
         }
-        // TODO: warn about other return codes (redirects and so on)
+        Logger::Warn() << "RPC didn't fail but returned unhandled HTTP code" << httpcode;
         break;
 
     case QNetworkReply::ConnectionRefusedError:
-        qCritical() << "Could not contact host";
+        Logger::Warn() << "Could not contact transmission via HTTP RPC";
         break;
 
     case QNetworkReply::AuthenticationRequiredError:
@@ -116,13 +117,13 @@ void Rpc::http_finished( QNetworkReply * reply )
         {
             if (!requires_auth)
             {
-                qDebug() << "Authentication required, retrying with credentials";
+                Logger::Info() << "Authentication required, retrying with credentials";
                 requires_auth = true;
                 http_request(cur_request);
             }
             else
             {
-                qCritical() << "Authentication failed" << reply;
+                Logger::Error() << "Authentication failed" << reply;
                 throw EXIT_RPC_AUTH_FAILED;
             }
         }
@@ -136,15 +137,16 @@ void Rpc::http_finished( QNetworkReply * reply )
             auth_token = reply->rawHeader(QByteArray("X-Transmission-Session-Id"));
             if (auth_token.isEmpty())
             {
-                qCritical() << "Expected an X-Transmission-Session-Id token, but didn't get any.";
+                Logger::Error() << "Expected an X-Transmission-Session-Id token, but didn't get any.";
                 throw EXIT_RPC_NO_TOKEN;
             }
             qDebug() << "New X-Transmission-Session-Id" << auth_token << "now redo request";
+            Logger::Debug(this) << "Received X-Transmission-Session-Id" << auth_token;
             http_request(cur_request);
         }
         break;
     default:
-        qCritical() << "Unidentified HTTP Error" << reply->error();
+        Logger::Error() << "Unidentified HTTP Error" << reply->error();
         throw EXIT_RPC_HTTP_ERROR;
     }
 
@@ -161,7 +163,7 @@ void Rpc::http_response(QByteArray & response)
     QVariant data = parser.parse(response, &ok);
     if (!ok)
     {
-        qCritical() << "QJson parsing error" << parser.errorString() << "at" << parser.errorLine();
+        Logger::Error() << "QJson parsing error" << parser.errorString() << "at" << parser.errorLine();
         throw EXIT_JSON_PARSING_ERROR;
     }
 
@@ -199,7 +201,7 @@ void Rpc::json_response(QVariant & response)
     uint cur_tag = vm["tag"].toUInt(&ok);
     if (!ok)
     {
-        qCritical() << "Cannot convert tag" << vm["tag"].toString() << "to uint";
+        Logger::Error() << "Cannot convert tag" << vm["tag"].toString() << "to uint";
         throw EXIT_JSON_CONVERT_ERROR;
     }
 
@@ -210,7 +212,7 @@ void Rpc::json_response(QVariant & response)
     qDebug() << "result" << result;
     if (result != "success")
     {
-        qCritical() << "Json request failed : " << json_cur;
+        Logger::Error() << "Json request failed : " << json_cur;
         throw EXIT_RPC_FAILED;
     }
 
@@ -252,14 +254,14 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
         qlonglong downloadedEver = mt["downloadedEver"].toLongLong(&ok);
         if (!ok)
         {
-            qCritical() << "Cannot convert downloadedEver" << mt["downloadedEver"].toString() << "to longlong";
+            Logger::Error() << "Cannot convert downloadedEver" << mt["downloadedEver"].toString() << "to longlong";
             throw EXIT_JSON_CONVERT_ERROR;
         }
 
         qlonglong uploadedEver = mt["uploadedEver"].toLongLong(&ok);
         if (!ok)
         {
-            qCritical() << "Cannot convert uploadedEver" << mt["uploadedEver"].toString() << "to longlong";
+            Logger::Error() << "Cannot convert uploadedEver" << mt["uploadedEver"].toString() << "to longlong";
             throw EXIT_JSON_CONVERT_ERROR;
         }
 
@@ -271,5 +273,5 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
     }
 
     QDateTime t_end = QDateTime::currentDateTime();
-    qDebug() << "Storage duration" << t_start.msecsTo(t_end) << "ms";
+    Logger::Debug(this) << "DB Storage duration" << t_start.msecsTo(t_end) << "ms";
 }

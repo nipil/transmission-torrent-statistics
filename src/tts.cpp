@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QDir>
 #include "common.h"
+#include "logger.h"
 #include "tts.h"
 #include "ttsig.h"
 
@@ -96,7 +97,7 @@ Tts::~Tts()
 
 void Tts::loadSettings()
 {
-    qDebug() << "Loading Settings";
+    Logger::Debug(this) << "Loading Settings";
 
     QMap<QString,QVariant> params;
     params.insert(TTS_SETTINGS_RPC_HOST,QString("localhost"));
@@ -114,6 +115,7 @@ void Tts::loadSettings()
     {
         QVariant var = settings->value( i.key(), i.value() );
         settings->setValue( i.key(), var );
+        Logger::Debug(this) << "Parameter" << i.key() << "=" << var.toString();
     }
 }
 
@@ -122,14 +124,14 @@ void Tts::signalCheck()
     if (reloadRequested)
     {
         reloadRequested = false;
-        qDebug() << "Tts::signalCheck reloadRequested";
+        Logger::Info() << "Reload requested";
         settings->sync();
         dbs->reload();
     }
     if (exitRequested)
     {
         exitRequested = false;
-        qDebug() << "Tts::signalCheck exitRequested";
+        Logger::Info() << "Exit requested";
         quit();
     }
 }

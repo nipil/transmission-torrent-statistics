@@ -19,6 +19,7 @@ Dbs::Dbs(QObject *p, QSettings * s, QString overrideFileName) :
     qDebug() << "Dbs::Dbs";
 
     connection_name = TTS_DB_CONNECTION_NAME + overridden_filename;
+    Logger::Debug(this) << "Database connection name :" << connection_name;
 
     open();
 }
@@ -30,7 +31,7 @@ void Dbs::open()
     QSqlDatabase db = QSqlDatabase::addDatabase(TTS_DB_DRIVER,connection_name);
     if (!db.isValid())
     {
-        qCritical() << "Could not setup database environment using driver" << TTS_DB_DRIVER << db.lastError().text();
+        Logger::Error() << "Could not setup database environment using driver" << TTS_DB_DRIVER << db.lastError().text();
         throw EXIT_DB_SETUP_FAILED;
     }
 
@@ -39,10 +40,10 @@ void Dbs::open()
     if (!overridden_filename.isEmpty())
     {
         filename = overridden_filename;
-        qDebug() << "DB filename overridden to" << filename;
+        Logger::Info() << "DB filename overridden to" << filename;
     }
     QString absfilepath = path.absoluteFilePath(filename);
-    qDebug() << "Database location" << absfilepath;
+    Logger::Info() << "Database location" << absfilepath;
 
     db.setDatabaseName(absfilepath);
 
@@ -50,21 +51,25 @@ void Dbs::open()
     qDebug() << "DB open" << ok;
     if (!ok)
     {
-        qCritical() << "Database open error" << db.lastError().text();
+        Logger::Error() << "Database open error" << db.lastError().text();
         throw EXIT_DB_OPEN;
     }
 
     if (!db.driver()->hasFeature(QSqlDriver::Transactions))
     {
-        qCritical() << "Database doesn't support transaction";
+        Logger::Error() << "Database doesn't support transaction";
         throw EXIT_DB_TRANSACTION_ERROR;
     }
 
     known_tables = db.tables();
-    qDebug() << "Tables are :" << known_tables.join("\n");
+    known_tables.sort();
+    Logger::Debug(this) << this << "DB Tables are :" << known_tables.join(" ");
 
     if (!known_tables.contains(TTS_DB_HASHTABLE_NAME))
+    {
+        Logger::Debug(this) << "Creating master table";
         createMasterTable();
+    }
 
     loadMasterHashes();
 
@@ -101,13 +106,13 @@ QSqlQuery * Dbs::initQuery(bool transaction)
 
     if (!db.isValid())
     {
-        qCritical() << "Could not find database connection" << db.lastError().text();
+        Logger::Error() << "Could not find database connection" << db.lastError().text();
         throw EXIT_DB_CONNECTION_NOT_FOUND;
     }
 
     if (!db.isOpen())
     {
-        qCritical() << "Database open error" << db.lastError().text();
+        Logger::Error() << "Database open error" << db.lastError().text();
         throw EXIT_DB_OPEN;
     }
 
@@ -122,7 +127,7 @@ QSqlQuery * Dbs::initQuery(bool transaction)
     {
         if (!db.transaction())
         {
-            qCritical() << "Could not start transaction" << db.lastError().text();
+            Logger::Error() << "Could not start transaction" << db.lastError().text();
             throw EXIT_DB_TRANSACTION_ERROR;
         }
     }
@@ -144,7 +149,7 @@ void Dbs::execQuery(QSqlQuery * query)
 
     if (!ok)
     {
-        qCritical() << "Query failed" << query->lastError().text();
+        Logger::Error() << "Query failed" << query->lastError().text();
         if (query) delete query;
         throw EXIT_DB_QUERY_FAILED;
     }
@@ -161,7 +166,7 @@ void Dbs::cleanupQuery(QSqlQuery * query, bool transaction)
         QSqlDatabase db = QSqlDatabase::database(connection_name,true);
         if (!db.commit())
         {
-            qCritical() << "Could not commit transaction" << db.lastError().text();
+            Logger::Error() << "Could not commit transaction" << db.lastError().text();
             throw EXIT_DB_TRANSACTION_ERROR;
         }
     }
@@ -217,7 +222,7 @@ void Dbs::loadMasterHashes()
     {
         QString hash = q->value(0).toString();
         QString name = q->value(1).toString();
-        qDebug() << "hash" << hash << "name" << name;
+        Logger::Debug(this) << "hash" << hash << "name" << name;
         known_hashes.insert(hash,name);
     }
 
@@ -268,7 +273,7 @@ uint Dbs::getCount(QString & hashString)
         count = q->value(0).toUInt(&ok);
         if (!ok)
         {
-            qCritical() << "Cannot convert count" << q->value(0).toString() << "to uint";
+            Logger::Error() << "Cannot convert count" << q->value(0).toString() << "to uint";
             throw EXIT_DB_CONVERT_ERROR;
         }
     }
@@ -302,6 +307,7 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
     // if not yet known, insert this torrent hash in master hash list
     if (!known_hashes.contains(hashString))
     {
+        Logger::Debug(this) << "Inserting torrent" << hashString << "in master table";
         insertMasterTable(hashString,name);
     }
 
@@ -310,6 +316,7 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
     // if storage table for this torrent hash doesn't exist, create it
     if (!known_tables.contains(tableName))
     {
+        Logger::Debug(this) << "Creating table for torrent" << hashString;
         createHashTable(tableName);
     }
 
@@ -431,19 +438,19 @@ void Dbs::Sample::set(QVariant vt, QVariant vd, QVariant vu)
     uint t = vt.toUInt(&ok);
     if (!ok)
     {
-        qCritical() << "Cannot convert unixtime" << vt.toString() << "to uint";
+        Logger::Error() << "Cannot convert unixtime" << vt.toString() << "to uint";
         throw EXIT_DB_CONVERT_ERROR;
     }
     qlonglong d = vd.toLongLong(&ok);
     if (!ok)
     {
-        qCritical() << "Cannot convert downloadedEver" << vd.toString() << "to qlonglong";
+        Logger::Error() << "Cannot convert downloadedEver" << vd.toString() << "to qlonglong";
         throw EXIT_DB_CONVERT_ERROR;
     }
     qlonglong u = vu.toLongLong(&ok);
     if (!ok)
     {
-        qCritical() << "Cannot convert uploadedEver" << vu.toString() << "to qlonglong";
+        Logger::Error() << "Cannot convert uploadedEver" << vu.toString() << "to qlonglong";
         throw EXIT_DB_CONVERT_ERROR;
     }
 
@@ -460,6 +467,8 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
     if (!o.db_deduplication)
         return;
 
+    Logger::Info() << "Entering maintenance mode";
+
     // move current database out of the way to create a fresh one
     QDateTime now = QDateTime::currentDateTime();
     QDir path( s->value(TTS_SETTINGS_DB_PATH).toString() );
@@ -467,16 +476,18 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
     QString oname = now.toString( "yyyy-MM-dd_hh-mm-ss_zzz_" ) + cname;
     QString cpath = path.absoluteFilePath( cname );
     QString opath = path.absoluteFilePath( oname );
-    qDebug() << "Backup name" << opath;
+    Logger::Info() << "DB Backup name:" << opath;
     if (!QFile::rename(cpath,opath))
     {
-        qCritical() << "Renaming " << cpath << "to" << opath << "failed";
+        Logger::Error() << "Renaming " << cpath << "to" << opath << "failed";
         throw EXIT_DB_MAINTENANCE_RENAME_ERROR;
     }
 
     // create new clean database and open old one
     Dbs cdb(p,s);
     Dbs odb(p,s,oname);
+
+    QDateTime t_start = QDateTime::currentDateTime();
 
     // import old database data to new database, cleaning on the way
     foreach(QString hashString, odb.known_hashes.keys())
@@ -512,7 +523,10 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
 
         uint after = cdb.getCount(hashString);
 
-        qWarning() << tableName << "before" << count << "after" << after;
+        Logger::Info() << "Torrent" << hashString << "from" << count << "to" << after << "samples";
     }
-}
 
+    QDateTime t_end = QDateTime::currentDateTime();
+
+    Logger::Info() << "Exiting maintenance mode, operations took" << t_start.secsTo(t_end) << "seconds";
+}

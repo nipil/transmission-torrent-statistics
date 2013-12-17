@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <csignal>
 #include "common.h"
+#include "logger.h"
 #include "tts.h"
 
 void signal_handler(int signo)
@@ -25,20 +26,20 @@ void signal_handler(int signo)
 
 void signal_init()
 {
-    qDebug() << "Initializing signal handling";
+    Logger::Debug() << "Initializing signal handling";
     if (signal(SIGINT,signal_handler) == SIG_ERR)
     {
-        qCritical() << "Cannot register SIGINT";
+        Logger::Error() << "Cannot register SIGINT";
         throw EXIT_SIGNAL_INIT_ERROR;
     }
     if (signal(SIGTERM,signal_handler) == SIG_ERR)
     {
-        qCritical() << "Cannot register SIGTERM";
+        Logger::Error() << "Cannot register SIGTERM";
         throw EXIT_SIGNAL_INIT_ERROR;
     }
     if (signal(SIGHUP,signal_handler) == SIG_ERR)
     {
-        qCritical() << "Cannot register SIGHUP";
+        Logger::Error() << "Cannot register SIGHUP";
         throw EXIT_SIGNAL_INIT_ERROR;
     }
 }

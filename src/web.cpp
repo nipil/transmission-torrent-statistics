@@ -3,10 +3,9 @@
 #include <QTcpSocket>
 #include <QRegExp>
 #include <QDir>
-#include "common.h"
-
 #include <QDateTime>
-
+#include "common.h"
+#include "logger.h"
 #include "web.h"
 
 Web::Web(QObject *parent, QSettings * s) :
@@ -19,13 +18,13 @@ Web::Web(QObject *parent, QSettings * s) :
     Q_ASSERT(c1 == true);
 
     int port = settings->value(TTS_SETTINGS_WEB_PORT).toInt();
-    qDebug() << "Web server listening on any adress, on tcp port" << port;
+    Logger::Info() << "Web server listening on any address (IPv4+IPv6) on tcp port" << port;
 
     // AnyIPv6 listens on both IPv4/IPv6 addresses
     bool ok = listen(QHostAddress::AnyIPv6, port);
     if (!ok || !isListening())
     {
-        qCritical() << "Could not create listening web server" << errorString() << serverError();
+        Logger::Error() << "Could not create listening web server" << errorString() << serverError();
         throw EXIT_WEB_LISTEN_ERROR;
     }
 }
@@ -45,7 +44,7 @@ void Web::newConnection()
 
     if (t && t->isValid() && t->isOpen())
     {
-        qDebug() << "Received connection" << t << "from" << t->peerAddress() << "port" << t->peerPort();
+        Logger::Debug(this) << "Received connection" << t << "from" << t->peerAddress().toString() << " using source port" << t->peerPort();
 
         bool c1 = connect(t,SIGNAL(readyRead()),this,SLOT(readyRead()));
         Q_ASSERT(c1 == true);
@@ -104,11 +103,14 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
     QRegExp re_data("/json/([0-9a-fA-F]+)/([0-9]+)/([0-9]+)[/]?");
     Q_ASSERT(re_data.isValid() == true);
 
+    Logger::Debug(this) << "Web request from" << socket << "asking for" << localPath;
+
     if (re_list.exactMatch(localPath))
     {
         QByteArray result;
         emit jsonList(result);
         qDebug() << "jsonList" << result;
+        Logger::Debug(this) << "Serving JSON LIST to" << socket;
         replyHeader(socket,"HTTP/1.1 200 OK",result.size());
         replyData(socket, result);
     }
@@ -122,13 +124,13 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
         uint time_from = fromTime.toUInt(&ok);
         if (!ok)
         {
-            qCritical() << "Cannot convert fromTime" << fromTime << "to uint";
+            Logger::Error() << "Cannot convert fromTime" << fromTime << "to uint";
             throw EXIT_WEB_CONVERT_ERROR;
         }
         uint time_to = toTime.toUInt(&ok);
         if (!ok)
         {
-            qCritical() << "Cannot convert toTime" << toTime << "to uint";
+            Logger::Error() << "Cannot convert toTime" << toTime << "to uint";
             throw EXIT_WEB_CONVERT_ERROR;
         }
         if (time_from > time_to)
@@ -139,6 +141,7 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
         QByteArray result;
         emit jsonStats(result, hashString, time_from, time_to);
         qDebug() << "jsonStats" << result;
+        Logger::Debug(this) << "Serving JSON STATS to" << socket << "for torrent" << hashString << "from time" << time_from << "to time" << time_to;
         replyHeader(socket,"HTTP/1.1 200 OK",result.size());
         replyData(socket, result);
     }
@@ -171,6 +174,8 @@ void Web::serveFile(QTcpSocket * socket, QString & path)
     }
 
     replyHeader(socket,"HTTP/1.1 200 OK",file.size());
+
+    Logger::Debug(this) << "Serving local file to" << socket << "totaling" << file.size() << "bytes";
 
     while(!file.atEnd())
     {
