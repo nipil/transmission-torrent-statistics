@@ -28,7 +28,7 @@
 
 #define TTS_BUFFER_SIZE (1 << 15)
 
-enum
+typedef enum
 {
     EXIT_OK = 0,
     EXIT_SIGNAL_INIT_ERROR,
@@ -53,6 +53,6 @@ enum
     EXIT_ARGUMENT_RANGE_ERROR,
 
     EXIT_UNKNOWN = 255
-};
+} EXIT_CODES;
 
 #endif // COMMON_H

@@ -142,7 +142,7 @@ bool Tts::notify ( QObject * receiver, QEvent * event )
     {
         return QCoreApplication::notify(receiver,event);
     }
-    catch( int err )
+    catch( EXIT_CODES err )
     {
         qCritical() << "Tts::notify" << "Exception" << err;
         exit(err);

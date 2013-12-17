@@ -24,14 +24,14 @@ int main(int argc, char *argv[])
         Logger::Verbose() << "Application event loop ended with return value" << result;
         return result;
     }
-    catch( int err )
+    catch( EXIT_CODES err )
     {
-        Logger::Error() << "Exception" << err;
+        Logger::Verbose() << "Exception caught, terminating with return code" << err;
         return err;
     }
     catch( ... )
     {
-        Logger::Error() << "Untracked  exception occured";
+        Logger::Verbose() << "Untracked exception occured";
         return EXIT_UNKNOWN;
     }
 }
