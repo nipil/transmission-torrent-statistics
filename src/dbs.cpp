@@ -361,6 +361,12 @@ void Dbs::jsonStats(QByteArray & out, QString & hashString, uint time_min, uint 
 {
     qDebug() << "Dbs::jsonStats" << hashString << time_min << time_max;
 
+    if (!known_hashes.contains(hashString))
+    {
+        out.append("[]");
+        return;
+    }
+
     QSqlQuery * q = initQuery(false);
     QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
                           "WHERE :time_min < unixtime AND unixtime < :time_max "
