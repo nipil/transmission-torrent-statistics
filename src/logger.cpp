@@ -110,6 +110,11 @@ Logger Logger::Error()
     return Logger("Error",LOG_ERROR);
 }
 
+Logger Logger::Verbose()
+{
+    return Logger("Verbose", LOG_VERBOSE);
+}
+
 void Logger::setMaxLevel(uint level)
 {
     qDebug() << "Logger::setMaxLevel" << level;

@@ -9,7 +9,8 @@ class Logger
 public:
     typedef enum
     {
-        LOG_MIN = 0,
+        LOG_VERBOSE = 0,
+        LOG_MIN,
         LOG_ERROR = LOG_MIN,
         LOG_WARN,
         LOG_INFO,
@@ -23,7 +24,7 @@ private:
     static uint global_max_level;
 
 public:
-    Logger(QString line_header, LOG_LEVEL level, void  * p = 0);
+    Logger(QString line_header, LOG_LEVEL level = LOG_VERBOSE, void  * p = 0);
     Logger(const Logger & other); /* needed because QTextStream cannot be copied */
     virtual ~Logger();
 
@@ -40,6 +41,7 @@ public:
     static Logger Info();
     static Logger Warn();
     static Logger Error();
+    static Logger Verbose();
 
 private:
     static bool show_qt_debug;

@@ -25,7 +25,7 @@ Options::Options(QStringList args) :
         if (arg.startsWith("--no-rpc-polling"))
         {
             no_rpc_polling = true;
-            Logger::Info() << "Disabling RPC polling";
+            Logger::Verbose() << "Disabling RPC polling";
         }
 
         else if (arg.startsWith("--rpc-polling-interval"))
@@ -33,23 +33,24 @@ Options::Options(QStringList args) :
             uint t = requiredValue(arg,args).toUInt(&ok);
             if (!ok) errorConvert(arg,"uint");
             rpc_polling_interval = t;
-            Logger::Info() << "Custom RPC polling interval set to" << rpc_polling_interval;
+            Logger::Verbose() << "Custom RPC polling interval set to" << rpc_polling_interval;
         }
 
         else if (arg.startsWith("--log-level"))
         {
             uint t = requiredValue(arg,args).toUInt(&ok);
             if (!ok) errorConvert(arg,"uint");
-            if (t >= Logger::LOG_MAX)
+            if (Logger::LOG_MIN <= t && t < Logger::LOG_MAX)
+                Logger::setMaxLevel(t);
+            else
                 errorRange(arg, QString::number(Logger::LOG_MIN), QString::number(Logger::LOG_MAX - 1));
-            Logger::setMaxLevel(t);
-            Logger::Info() << "Setting log level to " << t;
+            Logger::Verbose() << "Setting log level to" << t;
         }
 
         else if (arg.startsWith("--db-deduplication"))
         {
             db_deduplication = true;
-            Logger::Info() << "Database deduplication requested";
+            Logger::Verbose() << "Database deduplication requested";
         }
 
         else

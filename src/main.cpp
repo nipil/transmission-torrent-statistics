@@ -15,13 +15,13 @@ int main(int argc, char *argv[])
     {
         int result;
 
-        Logger::Info() << "Initializing application";
+        Logger::Verbose() << "Initializing application";
         Tts tts(argc, argv);
 
-        Logger::Info() << "Starting application event loop";
+        Logger::Verbose() << "Starting application event loop";
         result = tts.exec();
 
-        Logger::Info() << "Application event loop ended with return value" << result;
+        Logger::Verbose() << "Application event loop ended with return value" << result;
         return result;
     }
     catch( int err )
