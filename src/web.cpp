@@ -14,8 +14,12 @@ Web::Web(QObject *parent, QSettings * s) :
 {
     qDebug() << "Web::Web";
 
-    bool c1 = connect(this,SIGNAL(newConnection()),this,SLOT(newConnection()));
-    Q_ASSERT(c1 == true);
+    if (!connect(this,SIGNAL(newConnection()),
+                 this,SLOT(newConnection())))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 
     int port = settings->value(TTS_SETTINGS_WEB_PORT).toInt();
     Logger::Info() << "Web server listening on any address (IPv4+IPv6) on tcp port" << port;
@@ -46,11 +50,19 @@ void Web::newConnection()
     {
         Logger::Debug(this) << "Received connection" << t << "from" << t->peerAddress().toString() << " using source port" << t->peerPort();
 
-        bool c1 = connect(t,SIGNAL(readyRead()),this,SLOT(readyRead()));
-        Q_ASSERT(c1 == true);
+        if (!connect(t, SIGNAL(readyRead()),
+                     this,SLOT(readyRead())))
+        {
+            Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+            throw EXIT_QTCONNECT_ERROR;
+        }
 
-        bool c2 = connect(t,SIGNAL(disconnected()),this,SLOT(disconnected()));
-        Q_ASSERT(c2 == true);
+        if (!connect(t, SIGNAL(disconnected()),
+                     this,SLOT(disconnected())))
+        {
+            Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+            throw EXIT_QTCONNECT_ERROR;
+        }
     }
 }
 

@@ -19,8 +19,12 @@ Rpc::Rpc(QObject * p, QSettings * s) :
     nam = new QNetworkAccessManager(this);
     Q_CHECK_PTR(nam);
 
-    bool r = connect(nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
-    Q_ASSERT(r == true);
+    if (!connect(nam, SIGNAL(finished(QNetworkReply*)),
+                 this,  SLOT(http_finished(QNetworkReply*))))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 }
 
 Rpc::~Rpc()

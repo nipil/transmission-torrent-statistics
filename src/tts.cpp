@@ -39,31 +39,47 @@ Tts::Tts(int &argc, char **argv) :
     web = new Web(this,settings);
     Q_CHECK_PTR(web);
 
-    bool r1 = connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
-                      dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint)));
-    Q_ASSERT(r1 == true);
+    if (!connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
+                 dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint))))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 
-    bool w1 = connect(web,SIGNAL(jsonList(QByteArray&)),
-                      dbs,  SLOT(jsonList(QByteArray&)));
-    Q_ASSERT(w1 == true);
+    if (!connect(web,SIGNAL(jsonList(QByteArray&)),
+                 dbs,  SLOT(jsonList(QByteArray&))))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 
-    bool w2 = connect(web,SIGNAL(jsonStats(QByteArray&,QString&,uint,uint)),
-                      dbs,  SLOT(jsonStats(QByteArray&,QString&,uint,uint)));
-    Q_ASSERT(w2 == true);
+    if (!connect(web,SIGNAL(jsonStats(QByteArray&,QString&,uint,uint)),
+                 dbs,  SLOT(jsonStats(QByteArray&,QString&,uint,uint))))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 
     signalTimer = new QTimer(this);
     Q_CHECK_PTR(signalTimer);
 
-    bool r2 = connect(signalTimer,SIGNAL(timeout()),this,SLOT(signalCheck()));
-    Q_ASSERT(r2 == true);
+    if (!connect(signalTimer,SIGNAL(timeout()),
+                 this,         SLOT(signalCheck())))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 
     signalTimer->start(200);
 
     pollingTimer = new QTimer(this);
     Q_CHECK_PTR(pollingTimer);
 
-    bool r3 = connect(pollingTimer,SIGNAL(timeout()),rpc,SLOT(poll()));
-    Q_ASSERT(r3 == true);
+    if (!connect(pollingTimer,SIGNAL(timeout()),rpc,SLOT(poll())))
+    {
+        Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
+        throw EXIT_QTCONNECT_ERROR;
+    }
 
     if (!options.no_rpc_polling)
     {
