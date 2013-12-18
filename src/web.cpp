@@ -70,9 +70,7 @@ void Web::disconnected()
 {
     qDebug() << "Web::disconnected";
 
-    QTcpSocket * t = dynamic_cast<QTcpSocket *>(sender());
-    Q_CHECK_PTR(t);
-
+    QObject * t = sender(); // QTcpSocket here
     if (t) t->deleteLater();
 }
 
@@ -81,7 +79,11 @@ void Web::readyRead()
     qDebug() << "Web::readyRead";
 
     QTcpSocket * t = dynamic_cast<QTcpSocket *>(sender());
-    Q_CHECK_PTR(t);
+    if (t == NULL)
+    {
+        Logger::Warn() << "No socket object to read data from";
+        return;
+    }
 
     /* based on http://doc.qt.digia.com/solutions/4/qtservice/qtservice-example-server.html */
 
