@@ -1,10 +1,6 @@
 ## About
 
-A QT-based daemon polling transmission P2P client at regular intervals to gather statistics.
-
-Fetches cumulated upload and download amounts for each torrent.
-
-Stores these information in a database for later use.
+A daemon polling transmission P2P client at regular intervals to gather statistics. Fetches cumulated upload and download amounts for each torrent. Stores these information in a database for later use. Proposes a dynamic web portal to show the resulting data as graphs.
 
 ## Program Dependencies
 
@@ -117,6 +113,12 @@ For versions 1.0 to 1.2, each and every sample was stored in the database. Since
 
 As a consequence, a `--db-deduplication` command line option has been introduced, to trim existing databases. The program continues to work with untrimmed databases, but given that a single maintenance run will remove all duplicates forever (and no new duplicates will be added by the current code), all databases created before 1.3 *should* undergo maintenance. Database create later don't need this kind of maintenance at all.
 
+### Data age-based cleanup
+
+Versions 1.4 introduces a new DB maintenance operation : sample suppression based on sample age. This is done through option `db-age-cleanup=N` where `N>1` represent the maximum tolerated age for a sample, expressed in days. Each and every sample older than N days will be removed from the database, and torrents where no sample are present are removed from the database during maintenance.
+
+If storage is an issue, the user can use this option periodically. If storage is not a problem, you don't need to use this option at all.
+
 ## Irregularities in the data 
 
 If you delete a torrent, and later add it again, and/or your transmission client cleared it's stats, then the "amount" values will not be solely increasing.
@@ -124,8 +126,4 @@ If you delete a torrent, and later add it again, and/or your transmission client
 If the transmission client is unreachable at the time of the polling, or the data hasn't change since last known polling, no sample is stored, thus don't expect to get one sample per polling interval when querying the database.
 
 These kind of issues need to be taken into account for every later use of the collected data.
-
-## To be done
-
-Optimize web portal graph generation using deltas and bins
 
