@@ -83,7 +83,6 @@ void Rpc::http_request(uint json_tag)
     }
 
     QNetworkReply* reply = nam->post(req,json_tracking[json_tag]);
-    Q_CHECK_PTR(reply);
     qDebug() << "reply" << reply;
 
     http_tracking.insert(reply,json_tag);
