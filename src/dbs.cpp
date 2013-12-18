@@ -133,7 +133,6 @@ QSqlQuery * Dbs::initQuery(bool transaction)
     }
 
     QSqlQuery * query = new QSqlQuery("",db);
-    Q_CHECK_PTR(query);
 
     return query;
 }
@@ -142,7 +141,6 @@ void Dbs::execQuery(QSqlQuery * query)
 {
     qDebug() << "Dbs::execQuery" << query;
 
-    Q_CHECK_PTR(query);
     bool ok = query->exec();
 
     qDebug() << "sql" << query->lastQuery();

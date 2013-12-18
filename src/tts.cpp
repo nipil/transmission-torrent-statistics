@@ -23,7 +23,6 @@ Tts::Tts(int &argc, char **argv) :
     signal_init();
 
     settings = new QSettings(this);
-    Q_CHECK_PTR(settings);
     loadSettings();
 
     if (options.db_age > 0 ||
@@ -31,13 +30,10 @@ Tts::Tts(int &argc, char **argv) :
         Dbs::maintenance(this,settings,options);
 
     dbs = new Dbs(this,settings);
-    Q_CHECK_PTR(dbs);
 
     rpc = new Rpc(this,settings);
-    Q_CHECK_PTR(rpc);
 
     web = new Web(this,settings);
-    Q_CHECK_PTR(web);
 
     if (!connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
                  dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint))))
@@ -61,7 +57,6 @@ Tts::Tts(int &argc, char **argv) :
     }
 
     signalTimer = new QTimer(this);
-    Q_CHECK_PTR(signalTimer);
 
     if (!connect(signalTimer,SIGNAL(timeout()),
                  this,         SLOT(signalCheck())))
@@ -73,7 +68,6 @@ Tts::Tts(int &argc, char **argv) :
     signalTimer->start(200);
 
     pollingTimer = new QTimer(this);
-    Q_CHECK_PTR(pollingTimer);
 
     if (!connect(pollingTimer,SIGNAL(timeout()),rpc,SLOT(poll())))
     {

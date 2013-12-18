@@ -17,7 +17,6 @@ Rpc::Rpc(QObject * p, QSettings * s) :
     qDebug() << "Rpc::Rpc";
 
     nam = new QNetworkAccessManager(this);
-    Q_CHECK_PTR(nam);
 
     if (!connect(nam, SIGNAL(finished(QNetworkReply*)),
                  this,  SLOT(http_finished(QNetworkReply*))))
