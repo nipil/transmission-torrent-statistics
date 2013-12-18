@@ -286,6 +286,11 @@ uint Dbs::getCount(QString & hashString)
             throw EXIT_DB_CONVERT_ERROR;
         }
     }
+    else
+    {
+        Logger::Error() << "Cannot get sample count for torrent" << hashString;
+        throw EXIT_DB_QUERY_FAILED;
+    }
 
     cleanupQuery(q,false);
 
