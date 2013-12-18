@@ -43,6 +43,7 @@ private:
     void close();
 
     QSqlQuery * initQuery(bool transaction);
+    void prepareQuery(QSqlQuery * query, QString sql);
     void execQuery(QSqlQuery * query);
     void cleanupQuery(QSqlQuery * query, bool transaction);
 

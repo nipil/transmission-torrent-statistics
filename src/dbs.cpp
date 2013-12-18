@@ -137,6 +137,17 @@ QSqlQuery * Dbs::initQuery(bool transaction)
     return query;
 }
 
+void Dbs::prepareQuery(QSqlQuery * query, QString sql)
+{
+    qDebug() << "Dbs::prepareQuery" << query;
+
+    if (!query->prepare(sql))
+    {
+        Logger::Error() << "Preparing query failed (" << query->lastError().text() << ") for sql :" << sql;
+        throw EXIT_DB_PREPARE_FAILED;
+    }
+}
+
 void Dbs::execQuery(QSqlQuery * query)
 {
     qDebug() << "Dbs::execQuery" << query;
@@ -180,7 +191,7 @@ void Dbs::createMasterTable()
                           "name VARCHAR(255),"
                           "primary KEY (hash));"
                           ).arg(TTS_DB_HASHTABLE_NAME);
-    q->prepare(sql);
+    prepareQuery(q,sql);
     execQuery(q);
     cleanupQuery(q,true);
 
@@ -196,7 +207,7 @@ void Dbs::insertMasterTable(QString & hashString, QString & name)
                           "(hash,name) "
                           "VALUES( :hash, :name );"
                           ).arg(TTS_DB_HASHTABLE_NAME);
-    q->prepare(sql);
+    prepareQuery(q,sql);
     q->bindValue(":hash", hashString);
     q->bindValue(":name", name);
     execQuery(q);
@@ -212,7 +223,7 @@ void Dbs::loadMasterHashes()
     QSqlQuery * q = initQuery(false);
     QString sql = QString("SELECT hash,name FROM %1;"
                           ).arg(TTS_DB_HASHTABLE_NAME);
-    q->prepare(sql);
+    prepareQuery(q,sql);
     execQuery(q);
 
     known_hashes.clear();
@@ -248,7 +259,7 @@ void Dbs::createHashTable(QString & tableName)
                           "uploadedEver INTEGER(32),"
                           "primary KEY (unixtime));"
                           ).arg(tableName);
-    q->prepare(sql);
+    prepareQuery(q,sql);
     execQuery(q);
     cleanupQuery(q,true);
 
@@ -261,7 +272,7 @@ uint Dbs::getCount(QString & hashString)
 
     QSqlQuery * q = initQuery(false);
     QString sql = QString("SELECT COUNT(unixtime) FROM %1;").arg(hashToTable(hashString));
-    q->prepare(sql);
+    prepareQuery(q,sql);
     execQuery(q);
 
     uint count = 0;
@@ -290,7 +301,7 @@ void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong download
                           "(unixtime,downloadedEver,uploadedEver) "
                           "VALUES( :unixtime, :downloadedEver, :uploadedEver);"
                           ).arg(tableName);
-    q->prepare(sql);
+    prepareQuery(q,sql);
     q->bindValue(":unixtime", unixtime);
     q->bindValue(":downloadedEver", downloadedEver);
     q->bindValue(":uploadedEver", uploadedEver);
@@ -369,7 +380,7 @@ void Dbs::jsonStats(QByteArray & out, QString & hashString, uint time_min, uint 
     QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
                           "WHERE :time_min < unixtime AND unixtime < :time_max "
                           "ORDER BY unixtime ASC;").arg(hashToTable(hashString));
-    q->prepare(sql);
+    prepareQuery(q,sql);
     q->bindValue(":time_min",time_min);
     q->bindValue(":time_max",time_max);
     execQuery(q);
@@ -399,7 +410,7 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
     QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
                           "WHERE unixtime = (SELECT MAX(unixtime) FROM %2);"
                           ).arg(tableName).arg(tableName);
-    q->prepare(sql);
+    prepareQuery(q,sql);
     execQuery(q);
 
     Dbs::Sample sample;
@@ -502,7 +513,7 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
         QSqlQuery * q = odb.initQuery(false);
         QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
                               "ORDER BY unixtime ASC;").arg(tableName);
-        q->prepare(sql);
+        odb.prepareQuery(q,sql);
         odb.execQuery(q);
 
         Dbs::Sample sample;
