@@ -13,8 +13,19 @@ function tts_init() {
         chart_timespan = $(this).attr("amount")
         tts_draw_graph()
     })
+
     // initial selection
     $("#timespan1").click()
+
+    // make table sortable
+    $("#torrent_list").tablesorter({
+                                       headers: {
+                                           0: {
+                                               sorter: 'attr_time'
+                                           }
+                                       },
+                                       sortList: [[0, 1]]
+                                   })
 
     // init torrent list reload (maybe replaced by timed reload ?
     $("#torrent_list_items_reload").click(function () {
@@ -85,10 +96,9 @@ function tts_draw_graph() {
                   $.each(data, function (key, val) {
                       var x = parseInt(val.t)
                       var y = parseInt(val.u)
-                      points.push([val.t,val.u])
+                      points.push([val.t, val.u])
                   })
-                  var plot = $.plot($("#chart"), [ points ]);
-                  console.log(plot)
+                  var plot = $.plot($("#chart"), [points])
               })
 }
 
@@ -98,10 +108,13 @@ function tts_set_graph(hash) {
 }
 
 function tts_torrent_list_reload() {
+    var tdata = $("#torrent_list_items")
+    tdata.empty()
     $.getJSON("/json/list", function (data) {
-        var tdata = $("#torrent_list_items")
-        if (data.length > 0)
-            tdata.html("");
+        if (data.length == 0) {
+            tdata.html("<tr><td>--</td><td>--</td></tr>")
+            return
+        }
         var ct = tts_curtime()
         $.each(data, function (key, val) {
             var row = $("<tr/>")
@@ -126,13 +139,6 @@ function tts_torrent_list_reload() {
             row.append(name)
             tdata.append(row)
         })
-        $("#torrent_list").tablesorter({
-                                           headers: {
-                                               0: {
-                                                   sorter: 'attr_time'
-                                               }
-                                           },
-                                           sortList: [[0, 1]]
-                                       })
+        $("#torrent_list").trigger("update")
     })
 }

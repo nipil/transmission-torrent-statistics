@@ -16,11 +16,12 @@ On Debian-like systems where you run it
 ## Web portal dependencies
 
 As of today, the following modules are used
-- http://jqueryui.com/resources/download/jquery-ui-1.10.3.zip (MIT licence)
-- http://tablesorter.com/docs/#Download (MIT or GPL licence)
-- http://www.flotcharts.org/downloads/flot-0.8.2.zip (MIT License)
+- http://jquery.com (MIT licence)
+- http://jqueryui.com (MIT licence)
+- https://github.com/Mottie/tablesorter/ (MIT or GPL licence)
+- http://www.flotcharts.org (MIT License)
 
-These modules are served locally (see `index.html` for local path names)
+These modules are served locally (see path names for version numbers)
 
 ## Configuration
 
