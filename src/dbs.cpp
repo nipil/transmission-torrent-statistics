@@ -255,7 +255,6 @@ void Dbs::createHashTable(QString & tableName)
     QSqlQuery * q = initQuery(true);
     QString sql = QString("CREATE TABLE %1"
                           "(unixtime INTEGER(32),"
-                          "downloadedEver INTEGER(32),"
                           "uploadedEver INTEGER(32),"
                           "primary KEY (unixtime));"
                           ).arg(tableName);
@@ -297,26 +296,25 @@ uint Dbs::getCount(QString & hashString)
     return count;
 }
 
-void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver)
+void Dbs::insertHashTable(QString & tableName, uint unixtime, qlonglong uploadedEver)
 {
-    qDebug() << "Dbs::insertHashTable" << tableName << "T" << unixtime << "D" << downloadedEver << "U" << uploadedEver;
+    qDebug() << "Dbs::insertHashTable" << tableName << "T" << unixtime << "U" << uploadedEver;
 
     QSqlQuery * q = initQuery(true);
     QString sql = QString("INSERT OR REPLACE INTO %1"
-                          "(unixtime,downloadedEver,uploadedEver) "
-                          "VALUES( :unixtime, :downloadedEver, :uploadedEver);"
+                          "(unixtime,uploadedEver) "
+                          "VALUES( :unixtime, :uploadedEver);"
                           ).arg(tableName);
     prepareQuery(q,sql);
     q->bindValue(":unixtime", unixtime);
-    q->bindValue(":downloadedEver", downloadedEver);
     q->bindValue(":uploadedEver", uploadedEver);
     execQuery(q);
     cleanupQuery(q,true);
 }
 
-void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name, uint unixtime)
+void Dbs::store(QString & hashString, qlonglong uploadedEver, QString & name, uint unixtime)
 {
-    qDebug() << "Dbs::store" << hashString << downloadedEver << uploadedEver << name;
+    qDebug() << "Dbs::store" << hashString << uploadedEver << name;
 
     // if not yet known, insert this torrent hash in master hash list
     if (!known_hashes.contains(hashString))
@@ -342,11 +340,11 @@ void Dbs::store(QString & hashString, qlonglong downloadedEver, qlonglong upload
         i = last_samples.insert(hashString, sample);
     }
 
-    if (i == last_samples.end() || i->downloadedEver != downloadedEver || i->uploadedEver != uploadedEver)
+    if (i == last_samples.end() || i->uploadedEver != uploadedEver)
     {
-        insertHashTable(tableName, unixtime, downloadedEver, uploadedEver);
+        insertHashTable(tableName, unixtime, uploadedEver);
         // replaces the old if already existant
-        last_samples.insert( hashString, Sample(unixtime,downloadedEver,uploadedEver) );
+        last_samples.insert( hashString, Sample(unixtime,uploadedEver) );
     }
 }
 
@@ -382,7 +380,7 @@ void Dbs::jsonStats(QByteArray & out, QString & hashString, uint time_min, uint 
     }
 
     QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+    QString sql = QString("SELECT unixtime,uploadedEver FROM %1 "
                           "WHERE :time_min < unixtime AND unixtime < :time_max "
                           "ORDER BY unixtime ASC;").arg(hashToTable(hashString));
     prepareQuery(q,sql);
@@ -395,8 +393,7 @@ void Dbs::jsonStats(QByteArray & out, QString & hashString, uint time_min, uint 
     {
         QVariantMap torrent;
         torrent.insert("t",q->value(0).toString());
-        torrent.insert("d",q->value(1).toString());
-        torrent.insert("u",q->value(2).toString());
+        torrent.insert("u",q->value(1).toString());
         torrents << torrent;
     }
 
@@ -412,7 +409,7 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
 
     QString tableName = hashToTable(hashString);
     QSqlQuery * q = initQuery(false);
-    QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+    QString sql = QString("SELECT unixtime,uploadedEver FROM %1 "
                           "WHERE unixtime = (SELECT MAX(unixtime) FROM %2);"
                           ).arg(tableName).arg(tableName);
     prepareQuery(q,sql);
@@ -421,8 +418,8 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
     Dbs::Sample sample;
     if (q->next())
     {
-        sample.set(q->value(0),q->value(1),q->value(2));
-        qDebug() << "Found" << sample.unixtime << sample.downloadedEver << sample.uploadedEver;
+        sample.set(q->value(0),q->value(1));
+        qDebug() << "Found" << sample.unixtime << sample.uploadedEver;
     }
     else
     {
@@ -436,22 +433,19 @@ Dbs::Sample Dbs::getLatest(QString & hashString)
 
 Dbs::Sample::Sample() :
   unixtime(0),
-  downloadedEver(0),
   uploadedEver(0)
 {
 }
 
-Dbs::Sample::Sample(uint t, qlonglong d, qlonglong u) :
+Dbs::Sample::Sample(uint t, qlonglong u) :
     unixtime(t),
-    downloadedEver(d),
     uploadedEver(u)
 {
 }
 
-void Dbs::Sample::set(QVariant vt, QVariant vd, QVariant vu)
+void Dbs::Sample::set(QVariant vt, QVariant vu)
 {
     unixtime = 0;
-    downloadedEver = 0;
     uploadedEver = 0;
 
     bool ok;
@@ -459,12 +453,6 @@ void Dbs::Sample::set(QVariant vt, QVariant vd, QVariant vu)
     if (!ok)
     {
         Logger::Error() << "Cannot convert unixtime" << vt.toString() << "to uint";
-        throw EXIT_DB_CONVERT_ERROR;
-    }
-    qlonglong d = vd.toLongLong(&ok);
-    if (!ok)
-    {
-        Logger::Error() << "Cannot convert downloadedEver" << vd.toString() << "to qlonglong";
         throw EXIT_DB_CONVERT_ERROR;
     }
     qlonglong u = vu.toLongLong(&ok);
@@ -475,7 +463,6 @@ void Dbs::Sample::set(QVariant vt, QVariant vd, QVariant vu)
     }
 
     unixtime = t;
-    downloadedEver = d;
     uploadedEver = u;
 }
 
@@ -516,7 +503,7 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
         QString tableName = odb.hashToTable(hashString);
 
         QSqlQuery * q = odb.initQuery(false);
-        QString sql = QString("SELECT unixtime,downloadedEver,uploadedEver FROM %1 "
+        QString sql = QString("SELECT unixtime,uploadedEver FROM %1 "
                               "ORDER BY unixtime ASC;").arg(tableName);
         odb.prepareQuery(q,sql);
         odb.execQuery(q);
@@ -525,7 +512,7 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
         bool first = true;
         while(q->next())
         {
-            sample.set(q->value(0),q->value(1),q->value(2));
+            sample.set(q->value(0),q->value(1));
 
             // db age cleanup task, skip sample if old
             if (o.db_age > 0)
@@ -533,7 +520,7 @@ void Dbs::maintenance(QObject * p, QSettings * s, Options & o)
                     continue;
 
             // data deduplication is done automatically on lower level
-            cdb.store(hashString,sample.downloadedEver,sample.uploadedEver, name, sample.unixtime);
+            cdb.store(hashString,sample.uploadedEver, name, sample.unixtime);
 
             // deactivate qDebug() output after first sample to prevent flooding
             // this way we can still check table creation and so on

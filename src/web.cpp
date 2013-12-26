@@ -112,7 +112,7 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
     QRegExp re_list("/json/list[/]?");
     Q_ASSERT(re_list.isValid() == true);
 
-    // RPC: request torrent stats (up/down total)
+    // RPC: request torrent stats (upload total)
     // url /hash/fromTime/toTime
     QRegExp re_data("/json/([0-9a-fA-F]+)/([0-9]+)/([0-9]+)[/]?");
     Q_ASSERT(re_data.isValid() == true);

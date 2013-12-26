@@ -35,8 +35,8 @@ Tts::Tts(int &argc, char **argv) :
 
     web = new Web(this,settings);
 
-    if (!connect(rpc,SIGNAL(store(QString&,qlonglong,qlonglong,QString&,uint)),
-                 dbs,  SLOT(store(QString&,qlonglong,qlonglong,QString&,uint))))
+    if (!connect(rpc,SIGNAL(store(QString&,qlonglong,QString&,uint)),
+                 dbs,  SLOT(store(QString&,qlonglong,QString&,uint))))
     {
         Logger::Error() << "Could not connect QT signal in file" << __FILE__ << "on line" << __LINE__;
         throw EXIT_QTCONNECT_ERROR;

@@ -229,7 +229,6 @@ void Rpc::tbt_everstats_request()
     QVariantList tmp;
     tmp << "hashString";
     tmp << "uploadedEver";
-    tmp << "downloadedEver";
     tmp << "name";
 
     QVariantMap fields;
@@ -254,13 +253,6 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
         bool ok;
         QVariantMap mt = torrent.toMap();
 
-        qlonglong downloadedEver = mt["downloadedEver"].toLongLong(&ok);
-        if (!ok)
-        {
-            Logger::Error() << "Cannot convert downloadedEver" << mt["downloadedEver"].toString() << "to longlong";
-            throw EXIT_JSON_CONVERT_ERROR;
-        }
-
         qlonglong uploadedEver = mt["uploadedEver"].toLongLong(&ok);
         if (!ok)
         {
@@ -271,8 +263,8 @@ void Rpc::tbt_everstats_result(QVariant & arguments)
         QString hashString = mt["hashString"].toString();
         QString name = mt["name"].toString();
 
-        qDebug() << hashString << downloadedEver << uploadedEver << name;
-        emit store(hashString, downloadedEver, uploadedEver, name, t_start.toTime_t());
+        qDebug() << hashString << uploadedEver << name;
+        emit store(hashString, uploadedEver, name, t_start.toTime_t());
     }
 
     QDateTime t_end = QDateTime::currentDateTime();

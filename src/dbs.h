@@ -29,11 +29,10 @@ public:
     {
     public:
         uint unixtime;
-        qlonglong downloadedEver;
         qlonglong uploadedEver;
         Sample();
-        Sample(uint t, qlonglong d, qlonglong u);
-        void set(QVariant t, QVariant d, QVariant u);
+        Sample(uint t, qlonglong u);
+        void set(QVariant t, QVariant u);
     };
 
 private:
@@ -54,7 +53,7 @@ private:
     void createMasterTable();
     void insertMasterTable(QString & hashString, QString & name);
     void createHashTable(QString & hashString);
-    void insertHashTable(QString & hashString, uint unixtime, qlonglong downloadedEver, qlonglong uploadedEver);
+    void insertHashTable(QString & hashString, uint unixtime, qlonglong uploadedEver);
 
     Dbs::Sample getLatest(QString & hashString);
     uint getCount(QString & hashString);
@@ -70,7 +69,7 @@ public:
 signals:
 
 public slots:
-    void store(QString & hashString, qlonglong downloadedEver, qlonglong uploadedEver, QString & name, uint unixtime);
+    void store(QString & hashString, qlonglong uploadedEver, QString & name, uint unixtime);
 
     void jsonList(QByteArray & out);
     void jsonStats(QByteArray & out, QString & hashString, uint time_min, uint time_max);
