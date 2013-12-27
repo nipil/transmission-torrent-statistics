@@ -99,9 +99,19 @@ function tts_draw_graph_draw(points) {
                 show: true
             }
         },
+        xaxis: {
+            tickFormatter: function (v) {
+                var d = new Date()
+                d.setTime(v * 1000)
+                if (chart_timespan <= 86400) {
+                    return d.getHours() + ":" + d.getMinutes()
+                } else {
+                    return d.getDate() + "/" + (d.getMonth() + 1)
+                }
+            }
+        },
         yaxis: {
             tickFormatter: function (v) {
-                var orig = v
                 var units = ['B', 'K', 'M', 'G', 'T', 'P']
                 var unit = 0
                 while (v > 1024 && unit < 5) {
