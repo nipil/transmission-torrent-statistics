@@ -1,5 +1,6 @@
 // span time in seconds used for visualization
 var chart_timespan
+var chart_timemode
 var chart_hash
 
 // called when page is loaded
@@ -16,6 +17,16 @@ function tts_init() {
 
     // initial selection
     $("#timespan1").click()
+
+    // init radiobuttons in detailed tab
+    $("#timemode").buttonset()
+    $("#timemode > input").click(function () {
+        chart_timemode = $(this).attr("mode")
+        tts_draw_graph()
+    })
+
+    // initial selection
+    $("#timemode1").click()
 
     // make table sortable
     $("#torrent_list").tablesorter({
@@ -78,6 +89,64 @@ $.tablesorter.addParser({
                             type: 'numeric'
                         })
 
+function tts_draw_graph_absolute(data) {
+    var points = []
+    $.each(data, function (key, val) {
+        var x = parseInt(val.t)
+        var y = parseInt(val.u)
+        points.push([val.t, val.u])
+    })
+    var options = {
+        series: {
+            lines: {
+                show: true
+            },
+            points: {
+                show: true
+            }
+        }
+    }
+    var plot = $.plot($("#chart"), [points], options)
+}
+
+function tts_draw_graph_differential(data) {
+    var points = []
+    if (data.length < 2)
+        return
+    var last_t = parseInt(data[0].t)
+    var last_u = parseInt(data[0].u)
+    var delta = 0
+    var i = 0
+    $.each(data, function (key, val) {
+        var cur_t = parseInt(val.t)
+        var cur_u = parseInt(val.u)
+        if (cur_t > last_t) {
+            var du = cur_u - last_u
+            if (du < 0)
+                // stats were reset inbetween polls
+                du = last_u
+            var dt = cur_t - last_t
+            var speed = du / dt
+            // console.debug(i,cur_t, last_t, cur_u, last_u, du, dt, speed)
+            points.push([cur_t, speed])
+        }
+        last_t = cur_t
+        last_u = cur_u
+        i++
+    })
+    var options = {
+        series: {
+            lines: {
+                show: true
+            },
+            points: {
+                show: true
+            }
+        }
+    }
+    var plot = $.plot($("#chart"), [points], options)
+}
+
 function tts_draw_graph() {
     // verifying hash
     if (!chart_hash)
@@ -92,13 +161,10 @@ function tts_draw_graph() {
     // requesting data
     $.getJSON("/json/" + chart_hash + "/" + timespan_start + "/" + timespan_end,
               function (data) {
-                  var points = []
-                  $.each(data, function (key, val) {
-                      var x = parseInt(val.t)
-                      var y = parseInt(val.u)
-                      points.push([val.t, val.u])
-                  })
-                  var plot = $.plot($("#chart"), [points])
+                  if (chart_timemode == 0)
+                      tts_draw_graph_absolute(data)
+                  else
+                      tts_draw_graph_differential(data)
               })
 }
 
