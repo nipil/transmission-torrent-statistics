@@ -96,7 +96,7 @@ function tts_draw_graph_draw(points) {
                 show: true
             },
             points: {
-                show: true
+                show: false
             }
         },
         xaxis: {
@@ -108,7 +108,9 @@ function tts_draw_graph_draw(points) {
                 } else {
                     return d.getDate() + "/" + (d.getMonth() + 1)
                 }
-            }
+            },
+            max: tts_curtime(),
+            min: tts_curtime() - chart_timespan
         },
         yaxis: {
             tickFormatter: function (v) {
