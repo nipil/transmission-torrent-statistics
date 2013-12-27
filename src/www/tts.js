@@ -89,13 +89,7 @@ $.tablesorter.addParser({
                             type: 'numeric'
                         })
 
-function tts_draw_graph_absolute(data) {
-    var points = []
-    $.each(data, function (key, val) {
-        var x = parseInt(val.t)
-        var y = parseInt(val.u)
-        points.push([val.t, val.u])
-    })
+function tts_draw_graph_draw(points) {
     var options = {
         series: {
             lines: {
@@ -104,9 +98,31 @@ function tts_draw_graph_absolute(data) {
             points: {
                 show: true
             }
+        },
+        yaxis: {
+            tickFormatter: function (v) {
+                var orig = v
+                var units = ['B', 'K', 'M', 'G', 'T', 'P']
+                var unit = 0
+                while (v > 1024 && unit < 5) {
+                    v /= 1024
+                    unit++
+                }
+                return v.toFixed(2) + " " + units[unit]
+            }
         }
     }
     var plot = $.plot($("#chart"), [points], options)
+}
+
+function tts_draw_graph_absolute(data) {
+    var points = []
+    $.each(data, function (key, val) {
+        var x = parseInt(val.t)
+        var y = parseInt(val.u)
+        points.push([val.t, val.u])
+    })
+    tts_draw_graph_draw(points)
 }
 
 function tts_draw_graph_differential(data) {
@@ -134,17 +150,7 @@ function tts_draw_graph_differential(data) {
         last_u = cur_u
         i++
     })
-    var options = {
-        series: {
-            lines: {
-                show: true
-            },
-            points: {
-                show: true
-            }
-        }
-    }
-    var plot = $.plot($("#chart"), [points], options)
+    tts_draw_graph_draw(points)
 }
 
 function tts_draw_graph() {
