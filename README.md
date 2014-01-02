@@ -11,7 +11,7 @@ On Debian-like systems where you build it
 On Debian-like systems where you run it
 - libqt4-network
 - libqt4-sql-sqlite
-- libqjson
+- libqjson0
 
 ## Web portal dependencies
 
