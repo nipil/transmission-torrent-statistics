@@ -22,6 +22,7 @@
 
 #define TTS_SETTINGS_WEB_PORT "WebServer/Port"
 #define TTS_SETTINGS_WEB_PATH "WebServer/Path"
+#define TTS_SETTINGS_WEB_URL_REMOVE_PREFIX "WebServer/UrlRemovePrefix"
 
 #define TTS_SETTINGS_DB_PATH_DEFAULT QDir::homePath()
 #define TTS_SETTINGS_WEB_PATH_DEFAULT QDir::homePath()

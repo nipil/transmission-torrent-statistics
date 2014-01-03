@@ -121,6 +121,7 @@ void Tts::loadSettings()
     params.insert(TTS_SETTINGS_DB_PATH, TTS_SETTINGS_DB_PATH_DEFAULT);
     params.insert(TTS_SETTINGS_WEB_PORT, int(4646));
     params.insert(TTS_SETTINGS_WEB_PATH, TTS_SETTINGS_WEB_PATH_DEFAULT);
+    params.insert(TTS_SETTINGS_WEB_URL_REMOVE_PREFIX, QString(""));
 
     QMap<QString,QVariant>::const_iterator i;
     for (i=params.begin();i!=params.end();i++)

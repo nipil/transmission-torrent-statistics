@@ -107,6 +107,17 @@ void Web::serve(QTcpSocket * socket, QString & localPath)
 {
     qDebug() << "Web::serve" << localPath;
 
+    QString removePrefix = QDir::cleanPath( settings->value(TTS_SETTINGS_WEB_URL_REMOVE_PREFIX).toString() );
+    if (!removePrefix.isEmpty())
+    {
+        qDebug() << "Prefix" << removePrefix;
+        if (localPath == removePrefix || localPath.startsWith(removePrefix + "/"))
+            localPath.remove(0,removePrefix.length());
+        if (!localPath.startsWith("/"))
+            localPath.prepend("/");
+        qDebug() << "LocalPath" << localPath;
+    }
+
     // RPC: request list of known torrents
     // url /list
     QRegExp re_list("/json/list[/]?");
