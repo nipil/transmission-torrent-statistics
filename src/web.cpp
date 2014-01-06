@@ -99,6 +99,8 @@ void Web::readyRead()
         {
             serve(t, tokens[1]);
             t->flush();
+            if ( ! settings->value(TTS_SETTINGS_WEB_KEEPALIVE).toBool() )
+                t->close();
         }
     }
 }
