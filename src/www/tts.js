@@ -3,8 +3,6 @@ var chart_timespan
 var chart_timemode
 var chart_hash
 
-var base_url = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))
-
 // called when page is loaded
 function tts_init() {
     // init tabs
@@ -179,7 +177,7 @@ function tts_draw_graph() {
     var timespan_start = timespan_end - chart_timespan
 
     // requesting data
-    $.getJSON(base_url + "/json/" + chart_hash + "/" + timespan_start + "/" + timespan_end,
+    $.getJSON("json/" + chart_hash + "/" + timespan_start + "/" + timespan_end,
               function (data) {
                   if (chart_timemode == 0)
                       tts_draw_graph_absolute(data)
@@ -196,7 +194,7 @@ function tts_set_graph(hash) {
 function tts_torrent_list_reload() {
     var tdata = $("#torrent_list_items")
     tdata.empty()
-    $.getJSON(base_url + "/json/list", function (data) {
+    $.getJSON("json/list", function (data) {
         if (data.length == 0) {
             tdata.html("<tr><td>--</td><td>--</td></tr>")
             return
