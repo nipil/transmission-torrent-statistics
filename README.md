@@ -1,3 +1,7 @@
+# OBSOLETE
+
+This repository has been archived and will not be updated anymore.
+
 ## About
 
 A daemon polling transmission P2P client at regular intervals to gather statistics. Fetches cumulated upload amounts for each torrent. Stores these information in a database for later use. Proposes a dynamic web portal to show the resulting data as graphs.
